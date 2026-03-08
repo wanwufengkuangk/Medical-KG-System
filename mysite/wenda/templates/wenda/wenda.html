@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>AI 医药智能助理 - 基层医疗辅助决策平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <!-- 引入资源 -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+    
+    <style media="screen">
+        /* 1. 全局布局样式 */
+        body { background-color: #f0f2f5; font-family: "Microsoft YaHei", sans-serif; overflow-x: hidden; margin: 0; }
+        
+        /* 左侧导航栏 */
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 220px;
+            background: #2c3e50; color: white; padding-top: 20px; z-index: 1000;
+        }
+        .sidebar-brand { text-align: center; padding: 20px 10px; border-bottom: 1px solid #3e4f5f; margin-bottom: 20px; }
+        .sidebar-brand h4 { margin: 0; font-size: 18px; font-weight: bold; }
+        .sidebar-nav a { 
+            display: block; color: #abb1b7; padding: 15px 25px; text-decoration: none; transition: 0.3s;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: #1a252f; color: #3498db; border-left: 4px solid #3498db; text-decoration: none; }
+        .sidebar-nav i { margin-right: 10px; }
+
+        /* 右侧主体内容区 */
+        .main-wrapper { margin-left: 220px; padding: 20px; }
+        .workstation-header { 
+            background: white; padding: 15px 25px; margin-bottom: 20px; 
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* 2. 聊天窗口 UI 升级 */
+        .chat-main-card {
+            background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            overflow: hidden; height: 72vh; display: flex; flex-direction: column;
+        }
+
+        /* 聊天消息框容器 */
+        #conversation {
+            flex: 1; padding: 20px; overflow-y: auto; background-color: #f9fbff;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        /* 气泡美化 */
+        .user-message { width: 85%; float: right; margin-bottom: 15px; clear: both; }
+        .user-message p {
+            display: inline-block; background: #3498db; border-radius: 15px 15px 2px 15px;
+            color: #fff; padding: 10px 18px; margin: 5px; float: right; line-height: 1.6;
+            box-shadow: 0 2px 5px rgba(52,152,219,0.2); max-width: 90%;
+        }
+
+        .robot-message { width: 85%; float: left; margin-bottom: 15px; clear: both; }
+        .robot-message p {
+            display: inline-block; background: #fff; border-radius: 15px 15px 15px 2px;
+            color: #333; padding: 10px 18px; margin: 5px; float: left;
+            border: 1px solid #e0e0e0; line-height: 1.6; max-width: 90%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        /* 机器人身份标识 */
+        .bot-label-kg { color: #27ae60; font-weight: bold; margin-bottom: 5px; display: block; border-bottom: 1px dashed #eee; padding-bottom: 3px; font-size: 13px;}
+        .bot-label-ai { color: #8e44ad; font-weight: bold; margin-bottom: 5px; display: block; border-bottom: 1px dashed #eee; padding-bottom: 3px; font-size: 13px;}
+
+        /* 3. 输入区域美化（双按钮布局） */
+        .input-section { padding: 15px; background: #fff; position: relative; }
+        textarea#question {
+            height: 80px; width: 100%; resize: none; border: 1px solid #dcdfe6;
+            border-radius: 8px; padding: 12px; outline: none; font-size: 14px;
+            transition: all 0.3s;
+        }
+        textarea#question:focus { border-color: #3498db; box-shadow: 0 0 8px rgba(52,152,219,0.1); }
+
+        .action-buttons {
+            display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;
+        }
+        .btn-custom {
+            padding: 8px 20px; border-radius: 6px; font-weight: bold; transition: 0.3s; border: none;
+        }
+        .btn-kg { background: #27ae60; color: white; }
+        .btn-kg:hover { background: #219653; transform: translateY(-1px); color: white;}
+        .btn-ai { background: #8e44ad; color: white; }
+        .btn-ai:hover { background: #732d91; transform: translateY(-1px); color: white;}
+
+        /* 4. 右侧提示栏优化 */
+        .hint-box {
+            background: white; border-radius: 12px; padding: 0;
+            height: 72vh; border: 1px solid #edf2fc; overflow: hidden;
+            display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .hint-header {
+            background: #f8f9fa; padding: 15px 20px;
+            border-bottom: 1px solid #ebeef5; font-weight: bold; color: #2c3e50;
+        }
+        .hint-list { padding: 15px; flex: 1; overflow-y: auto; }
+
+        .hint-item {
+            display: block; padding: 12px 15px; background: #fff;
+            margin-bottom: 10px; border-radius: 8px; color: #606266;
+            font-size: 13px; text-decoration: none !important;
+            border: 1px solid #ebeef5; transition: all 0.2s;
+            cursor: pointer; position: relative; padding-left: 35px;
+        }
+        .hint-item:before {
+            content: "\e085"; font-family: 'Glyphicons Halflings';
+            position: absolute; left: 12px; color: #3498db; font-size: 12px;
+        }
+        .hint-item:hover { background: #ecf5ff; border-color: #d9ecff; color: #409eff; transform: translateX(5px); }
+
+        .feedback-section { padding: 15px; background: #fafafa; border-top: 1px solid #eee; text-align: center; }
+        .btn-feedback {
+            background: #fff; border: 1px solid #dcdfe6; color: #606266;
+            padding: 6px 15px; border-radius: 4px; font-size: 12px; transition: 0.3s; width: 100%; margin-top: 8px;
+        }
+        .btn-feedback:hover { color: #409eff; border-color: #c6e2ff; background-color: #ecf5ff; }
+
+        /* 自定义滚动条 */
+        #conversation::-webkit-scrollbar { width: 6px; }
+        #conversation::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+    <!-- 左侧导航栏 -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h4>医疗决策系统</h4>
+            <p style="font-size: 10px; color: #888;">Primary Medical Platform</p>
+        </div>
+        <div class="sidebar-nav">
+            <a href="{% url 'wenda:index' %}"><i class="glyphicon glyphicon-home"></i> <span>诊疗工作台</span></a>
+            <a href="{% url 'wenda:wenda' %}" class="active"><i class="glyphicon glyphicon-comment"></i> <span>智能问答</span></a>
+            <a href="{% url 'wenda:wenyi' %}"><i class="glyphicon glyphicon-edit"></i> <span>快速问医</span></a>
+            <a href="{% url 'wenda:department' '全部科室' %}"><i class="glyphicon glyphicon-th-list"></i> <span>科室索引</span></a>
+            <a href="{% url 'wenda:login' %}"><i class="glyphicon glyphicon-user"></i> <span>个人中心</span></a>
+        </div>
+    </div>
+
+    <!-- 右侧内容区 -->
+    <div class="main-wrapper">
+        <header class="workstation-header">
+            <div><span class="text-muted">当前状态：</span> <strong>双引擎 AI 决策助理已就绪</strong></div>
+            <div>
+                <span class="label label-success" style="padding: 5px 10px; margin-right: 5px;">图谱引擎</span>
+                <span class="label label-primary" style="padding: 5px 10px; background-color: #8e44ad;">大模型引擎</span>
+            </div>
+        </header>
+
+        <!-- 聊天与提示区 -->
+        <div class="row">
+            <div class="col-md-9">
+                <div class="chat-main-card">
+                    <!-- 消息展示区 -->
+                    <div id="conversation">
+                        <div class="row col-xs-12">
+                            <div class="robot-message">
+                                <p>
+                                    <span class="bot-label-kg"><i class="glyphicon glyphicon-cog"></i> 系统提示</span>
+                                    您好，我是您的医药智能助理。本系统搭载<strong>双问答引擎</strong>：<br>
+                                    1. 点击【图谱查询】，我将基于本地医疗知识图谱提供精准答案。<br>
+                                    2. 点击【DeepSeek智能分析】，我将调用大模型提供详细的发病机理与用药建议。<br>
+                                    请在下方输入您的问题。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 输入区 (双按钮) -->
+                    <div class="input-section">
+                        <textarea id="question" placeholder="请描述症状、疾病或药物（如：糖尿病有什么并发症？）"></textarea>
+                        <div class="action-buttons">
+                            <button class="btn btn-custom btn-kg" type="button" id="btn-kg">
+                                <i class="glyphicon glyphicon-search"></i> 图谱精准查询
+                            </button>
+                            <button class="btn btn-custom btn-ai" type="button" id="btn-ai">
+                                <i class="glyphicon glyphicon-flash"></i> DeepSeek 智能分析
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧提示栏 -->
+            <div class="col-md-3">
+                <div class="hint-box">
+                    <div class="hint-header">
+                        <i class="glyphicon glyphicon-lightbulb"></i> 测试样例
+                    </div>
+                    <div class="hint-list">
+                        <a class="hint-item" onclick="fillInput('为什么会失眠？')">为什么会失眠？</a>
+                        <a class="hint-item" onclick="fillInput('乳腺癌的症状有哪些？')">乳腺癌的症状有哪些？</a>
+                        <a class="hint-item" onclick="fillInput('板蓝根颗粒治什么病？')">板蓝根颗粒治什么病？</a>
+                        <a class="hint-item" onclick="fillInput('高血压挂什么科？')">高血压挂什么科？</a>
+                        <a class="hint-item" onclick="fillInput('糖尿病怎么用药？')">糖尿病怎么用药？</a>
+                        <a class="hint-item" onclick="fillInput('感冒有传染性吗？')">感冒有传染性吗？</a>
+                    </div>
+
+                    <div class="feedback-section">
+                        <p class="small text-muted" style="margin: 0;">回答不准确？</p>
+                        <a href="{% url 'wenda:feedback' 'wenda'%}" class="btn-feedback btn">
+                            <i class="glyphicon glyphicon-edit"></i> 提交反馈建议
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 双引擎逻辑 -->
+    <script type="text/javascript">
+        // 快捷提问：只填入，不自动发送，让用户选按钮
+        function fillInput(text) {
+            var input = document.getElementById("question");
+            if(input) input.value = text;
+        }
+
+        // 通用添加消息函数
+        // botType: 'user', 'kg', 'ai', 'loading'
+        function addMessage(message, botType) {
+            var Conversation = document.getElementById("conversation");
+            var newRow = document.createElement('div'),
+                newMessage = document.createElement('div'),
+                newP = document.createElement('p');
+
+            newRow.className = "row col-xs-12";
+
+            if (botType === 'user') {
+                newMessage.className = "user-message";
+                newP.innerHTML = message;
+            } else {
+                newMessage.className = "robot-message";
+                // 转换换行符
+                message = message.replace(/\n/g, "<br>");
+
+                // 根据不同身份加上不同的头衔
+                if (botType === 'kg') {
+                    newP.innerHTML = '<span class="bot-label-kg"><i class="glyphicon glyphicon-hdd"></i> 知识图谱引擎</span>' + message;
+                } else if (botType === 'ai') {
+                    newP.innerHTML = '<span class="bot-label-ai"><i class="glyphicon glyphicon-flash"></i> DeepSeek 引擎</span>' + message;
+                } else if (botType === 'loading') {
+                    newP.innerHTML = '<span style="color:#999;"><i class="glyphicon glyphicon-hourglass"></i> ' + message + '</span>';
+                    newMessage.id = "loading-msg"; // 给个 ID 方便等会删掉
+                }
+            }
+
+            newMessage.appendChild(newP);
+            newRow.appendChild(newMessage);
+            Conversation.appendChild(newRow);
+            Conversation.scrollTop = Conversation.scrollHeight;
+        }
+
+        // 移除加载动画
+        function removeLoading() {
+            var loadingNode = document.getElementById("loading-msg");
+            if(loadingNode) {
+                loadingNode.parentNode.parentNode.removeChild(loadingNode.parentNode);
+            }
+        }
+
+        // 引擎 1：调用知识图谱 (原逻辑)
+        function AskKG(question) {
+            addMessage("正在遍历知识图谱，请稍候...", "loading");
+            $.ajax({
+                url: '{% url 'wenda:wenda_ajax' %}',
+                type: 'GET',
+                data: {'question': question},
+                success: function (data) {
+                    removeLoading();
+                    var resData = eval(data);
+                    addMessage(resData.answer, "kg");
+                },
+                error: function() {
+                    removeLoading();
+                    addMessage("知识图谱服务异常。", "kg");
+                }
+            });
+        }
+
+        // 引擎 2：调用 DeepSeek (新逻辑)
+        function AskDeepSeek(question) {
+            addMessage("大模型正在推理思考，请稍候...", "loading");
+            $.ajax({
+                url: '{% url 'wenda:deepseek_ask' %}',
+                type: 'GET',
+                data: {'question': question},
+                success: function (data) {
+                    removeLoading();
+                    if (data && data.answer) {
+                        addMessage(data.answer, "ai");
+                    } else {
+                        addMessage("抱歉，API无返回结果。", "ai");
+                    }
+                },
+                error: function() {
+                    removeLoading();
+                    addMessage("连接 DeepSeek 服务器超时，请检查 API KEY 配置。", "ai");
+                }
+            });
+        }
+
+        // 绑定按钮事件
+        window.onload = function() {
+            var btnKG = document.getElementById("btn-kg");
+            var btnAI = document.getElementById("btn-ai");
+            var QuestionInput = document.getElementById("question");
+
+            // 点击图谱按钮
+            btnKG.onclick = function() {
+                var userText = QuestionInput.value;
+                if(userText == "") { alert("消息不能为空"); return; }
+                addMessage(userText, "user");
+                AskKG(userText);
+                QuestionInput.value = ""; // 不清空也可以，方便再用另一个引擎查，这里选择清空
+            }
+
+            // 点击 AI 按钮
+            btnAI.onclick = function() {
+                var userText = QuestionInput.value;
+                if(userText == "") { alert("消息不能为空"); return; }
+                addMessage(userText, "user");
+                AskDeepSeek(userText);
+                QuestionInput.value = "";
+            }
+
+            // 回车键默认触发图谱查询（防误触）
+            QuestionInput.onkeydown = function(e){
+                if(e.keyCode == 13 && !e.shiftKey){
+                    e.preventDefault();
+                    btnKG.click();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

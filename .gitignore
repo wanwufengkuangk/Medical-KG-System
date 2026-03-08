@@ -1,0 +1,16 @@
+# 忽略 Neo4j 数据库文件
+graph.db/
+data/
+db/
+
+# 忽略爬虫抓取的大型原始数据
+spider/info_symptoms.json
+spider/*.json
+spider/*.csv
+
+# 忽略 Python 缓存和虚拟环境
+__pycache__/
+*.pyc
+venv/
+.idea/
+.vscode/

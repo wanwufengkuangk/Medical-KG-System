@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>知识图谱全局可视化分析 - 医疗辅助决策平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- 引入 ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+
+    <style>
+        /* 暗黑科技风大屏样式 */
+        body {
+            background-color: #0b0f19;
+            color: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* 顶部标题栏 */
+        .dashboard-header {
+            /* 背景改为深蓝向中间渐变的科技风格 */
+            background: linear-gradient(90deg, #0b0f19 0%, #141e32 50%, #0b0f19 100%);
+            /* 底部增加一条发光的分隔线 */
+            border-bottom: 1px solid rgba(0, 229, 255, 0.3);
+            /* 增加底部阴影，产生悬浮感 */
+            box-shadow: 0 4px 20px rgba(0, 229, 255, 0.15);
+
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .dashboard-title {
+            font-size: 32px; /* 字体调大一点 */
+            font-weight: bold;
+            color: #00e5ff;    /* 科技蓝 */
+            letter-spacing: 4px; /* 增加字间距，更有大屏感 */
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.6); /* 发光效果 */
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .back-btn {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #00e5ff;
+            text-decoration: none;
+            font-size: 15px;
+            border: 1px solid rgba(0, 229, 255, 0.5);
+            padding: 8px 18px;
+            border-radius: 20px;
+            transition: 0.3s;
+            background: rgba(0, 229, 255, 0.05);
+        }
+        .back-btn:hover {
+            background: rgba(0, 229, 255, 0.3);
+            color: #fff;
+            text-decoration: none;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+        }
+
+        /* 数据卡片模块 */
+        .panel {
+            background: rgba(20, 30, 50, 0.8);
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.05);
+        }
+        .panel-title {
+            font-size: 16px;
+            color: #fff;
+            border-left: 4px solid #00e5ff;
+            padding-left: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* 顶部四个统计小卡片 */
+        .stat-box { text-align: center; padding: 10px 0; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #00e5ff; font-family: 'Arial', sans-serif; }
+        .stat-label { font-size: 13px; color: #8ba0b2; margin-top: 5px; }
+
+        /* 图表容器高度 */
+        .chart-md { height: 300px; width: 100%; }
+        .chart-lg { height: 860px; width: 100%; } /* 高度调大以对齐左侧三个面板 */
+         /* 新增   */
+        ::placeholder { color: #5d6d7e; opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部 -->
+    <div class="dashboard-header">
+        <a href="{% url 'wenda:index' %}" class="back-btn">← 返回工作台</a>
+        <h1 class="dashboard-title">医疗知识图谱全局数据洞察</h1>
+    </div>
+
+    <div class="container-fluid">
+        <!-- 核心指标栏 -->
+        <div class="row">
+            <div class="col-md-3"><div class="panel stat-box"><div class="stat-value" id="val_disease">0</div><div class="stat-label">疾病节点总数</div></div></div>
+            <div class="col-md-3"><div class="panel stat-box"><div class="stat-value" id="val_symptom">0</div><div class="stat-label">症状节点总数</div></div></div>
+            <div class="col-md-3"><div class="panel stat-box"><div class="stat-value" id="val_drug">0</div><div class="stat-label">药物节点总数</div></div></div>
+            <div class="col-md-3"><div class="panel stat-box"><div class="stat-value" id="val_relation" style="color: #ffaa00;">0</div><div class="stat-label">知识关联边总数</div></div></div>
+        </div>
+
+        <!-- 图表区 -->
+        <div class="row">
+            <!-- 左侧：统计图与质量评估面板 -->
+            <div class="col-md-4">
+                <div class="panel">
+                    <div class="panel-title">知识实体分布占比</div>
+                    <div id="pieChart" class="chart-md"></div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">科室疾病数量 TOP 8</div>
+                    <div id="barChart" class="chart-md"></div>
+                </div>
+
+                <!-- 知识图谱质量评估卡片 -->
+                <div class="panel" style="background: rgba(40, 20, 30, 0.8); border-color: rgba(255, 77, 79, 0.3);">
+                    <div class="panel-title" style="border-color: #ff4d4f;">数据质量实时评估 (Quality Check)</div>
+
+                    <!-- 指标1：关系完整性 -->
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                            <span style="color:#fff;">关联完整度 (含症状的疾病比)</span>
+                            <span id="q_complete" style="color: #00ff88; font-weight: bold;">--%</span>
+                        </div>
+                        <div style="height: 6px; background: #1a252f; border-radius: 3px; margin-top: 5px; overflow: hidden;">
+                            <div id="q_complete_bar" style="height: 100%; width: 0%; background: #00ff88; transition: 1s;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 指标2：孤立节点 -->
+                    <div style="margin-bottom: 15px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                            <span style="color:#fff;">孤立节点检测 (无任何关系边)</span>
+                            <span id="q_isolated" style="color: #ffaa00; font-weight: bold;">-- 个</span>
+                        </div>
+                        <div style="font-size: 12px; color: #8ba0b2; margin-top: 5px;">* 建议对这类废弃脏数据进行图谱清洗</div>
+                    </div>
+
+                    <!-- 指标3：属性缺失 -->
+                    <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                            <span style="color:#fff;">核心属性缺失 (无简介的疾病)</span>
+                            <span id="q_missing" style="color: #ff4d4f; font-weight: bold;">-- 个</span>
+                        </div>
+                        <div style="font-size: 12px; color: #8ba0b2; margin-top: 5px;">* 核心属性缺失会降低智能问答准确率</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：全局图谱 -->
+            <!-- 右侧：全局图谱 (带搜索功能版) -->
+            <div class="col-md-8">
+                <div class="panel" style="height: 100%; display: flex; flex-direction: column;">
+                    <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>知识图谱全貌抽样展示 (Macro View)</span>
+
+                        <!-- 新增：嵌入式搜索框 -->
+                        <div class="input-group" style="width: 300px;">
+                            <input type="text" id="graphSearchInput" class="form-control" placeholder="输入疾病/症状定位..."
+                                   style="background: rgba(0,0,0,0.3); border: 1px solid #00e5ff; color: #fff; height: 30px;">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" onclick="searchGraph()"
+                                        style="background: #00e5ff; color: #000; border: none; height: 30px; line-height: 15px; font-weight: bold;">
+                                    定位
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 图表容器：高度设为 flex-grow 自动填满剩余空间 -->
+                    <div id="macroGraph" style="flex-grow: 1; width: 100%; min-height: 800px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 接收 Django 传来的 JSON 数据 -->
+    <script>
+        // 1. 安全接收数据
+        var rawEntityCounts = {{ entity_counts|safe|default:"null" }};
+        var rawDeptNames = {{ dept_names|safe|default:"null" }};
+        var rawDeptValues = {{ dept_values|safe|default:"null" }};
+        var rawGraphNodes = {{ macro_nodes|safe|default:"null" }};
+        var rawGraphLinks = {{ macro_links|safe|default:"null" }};
+        var rawQualityData = {{ quality_data|safe|default:"null" }};
+
+        // 2. 数据默认值处理
+        var backendData = {
+            entityCounts: rawEntityCounts || {'disease': 0, 'symptom': 0, 'drug': 0, 'relation': 0},
+            deptNames: rawDeptNames || ['内科','外科','妇产科','儿科','五官科','皮肤科','骨科','肿瘤科'],
+            deptValues: rawDeptValues || [850, 620, 480, 450, 320, 280, 210, 190],
+            graphNodes: rawGraphNodes || [],
+            graphLinks: rawGraphLinks || [],
+            qualityData: rawQualityData || {'completeness': 85.5, 'isolated': 12, 'missing_brief': 45}
+        };
+
+        // 3. 填充顶部数字
+        document.getElementById('val_disease').innerText = backendData.entityCounts.disease;
+        document.getElementById('val_symptom').innerText = backendData.entityCounts.symptom;
+        document.getElementById('val_drug').innerText = backendData.entityCounts.drug;
+        document.getElementById('val_relation').innerText = backendData.entityCounts.relation;
+
+        // 4. 填充质量评估数据
+        document.getElementById('q_complete').innerText = backendData.qualityData.completeness + '%';
+        document.getElementById('q_complete_bar').style.width = backendData.qualityData.completeness + '%';
+        document.getElementById('q_isolated').innerText = backendData.qualityData.isolated + ' 个';
+        document.getElementById('q_missing').innerText = backendData.qualityData.missing_brief + ' 个';
+
+        // 5. 绘制饼图 (实体分布)
+        var pieChart = echarts.init(document.getElementById('pieChart'));
+        pieChart.setOption({
+            tooltip: { trigger: 'item' },
+            legend: { top: '5%', left: 'center', textStyle: {color: '#fff'} },
+            series: [{
+                name: '实体类型', type: 'pie', radius: ['40%', '70%'],
+                itemStyle: { borderRadius: 10, borderColor: '#141e32', borderWidth: 2 },
+                data: [
+                    { value: backendData.entityCounts.disease, name: '疾病', itemStyle:{color: '#ff4d4f'} },
+                    { value: backendData.entityCounts.symptom, name: '症状', itemStyle:{color: '#ffaa00'} },
+                    { value: backendData.entityCounts.drug, name: '药物', itemStyle:{color: '#00e5ff'} }
+                ]
+            }]
+        });
+
+        // 6. 绘制柱状图 (科室排名)
+        var barChart = echarts.init(document.getElementById('barChart'));
+        barChart.setOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+            xAxis: { type: 'value', splitLine: { show: false }, axisLabel: { color: '#8ba0b2' } },
+            yAxis: { type: 'category', data: backendData.deptNames.reverse(), axisLabel: { color: '#fff' } },
+            series: [{
+                name: '疾病数量', type: 'bar',
+                data: backendData.deptValues.reverse(),
+                itemStyle: {
+                    color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
+                        {offset: 0, color: '#00e5ff'}, {offset: 1, color: '#0072ff'}
+                    ]),
+                    borderRadius: [0, 10, 10, 0]
+                }
+            }]
+        });
+
+        // 7. 绘制全局图谱 (干净基础版，无花哨高亮)
+        var graphChart = echarts.init(document.getElementById('macroGraph'));
+        if (backendData.graphNodes.length === 0 || backendData.graphNodes === "[]") {
+            backendData.graphNodes = [{name: '等待后台加载数据...', symbolSize: 50}];
+        }
+
+        var graphOption = {
+            tooltip: { formatter: '{b}' },
+            series: [{
+                type: 'graph',
+                layout: 'force',
+                roam: true,           // 允许鼠标缩放和平移
+                draggable: true,      // 允许拖拽节点
+                label: { show: true, fontSize: 12, color: '#fff', position: 'right' },
+                force: {
+                    repulsion: 300,        // 斥力大小 (调小点图会紧凑些)
+                    edgeLength: [60, 120]  // 连线长度范围
+                },
+                data: backendData.graphNodes,
+                links: backendData.graphLinks,
+                itemStyle: { color: '#3498db' }, // 统一的清爽蓝色节点
+                lineStyle: {
+                    color: 'source',
+                    curveness: 0.1,        // 稍微带点弧度
+                    opacity: 0.7,
+                    width: 1.5
+                }
+            }]
+        };
+        graphChart.setOption(graphOption);
+        // --- 新增3：图谱搜索交互功能 ---
+        function searchGraph() {
+            var keyword = document.getElementById('graphSearchInput').value;
+            if (!keyword) {
+                alert("请输入关键词！");
+                return;
+            }
+
+            // 显示加载动画
+            graphChart.showLoading({
+                text: 'AI 正在检索关联图谱...',
+                color: '#00e5ff',
+                textColor: '#fff',
+                maskColor: 'rgba(0, 0, 0, 0.2)'
+            });
+
+            // 发送 AJAX 请求给 Django
+            fetch(`/analysis/search/?keyword=${encodeURIComponent(keyword)}`)
+                .then(response => response.json())
+                .then(data => {
+                    graphChart.hideLoading();
+
+                    if (data.nodes.length === 0) {
+                        alert("未找到与 '" + keyword + "' 相关的图谱数据！");
+                        return;
+                    }
+
+                    // 重新着色逻辑（保持科技感）
+                    var colorPalette = ['#00e5ff', '#ffaa00', '#ff4d4f', '#00ff88', '#b973ff'];
+                    var formattedNodes = data.nodes.map(function(node, index) {
+                        // 如果后端没有指定特定颜色（中心红），就轮播颜色
+                        var color = node.itemStyle && node.itemStyle.color ? node.itemStyle.color : colorPalette[index % colorPalette.length];
+                        return {
+                            name: node.name,
+                            symbolSize: node.symbolSize,
+                            itemStyle: {
+                                color: color,
+                                shadowBlur: 20,
+                                shadowColor: color
+                            }
+                        };
+                    });
+
+                    // 更新图表数据
+                    graphChart.setOption({
+                        series: [{
+                            data: formattedNodes,
+                            links: data.links
+                        }]
+                    });
+                })
+                .catch(error => {
+                    graphChart.hideLoading();
+                    console.error('Error:', error);
+                });
+        }
+
+        // 绑定回车键搜索
+        document.getElementById('graphSearchInput').addEventListener("keyup", function(event) {
+            if (event.keyCode === 13) {
+                searchGraph();
+            }
+        });
+        // 窗口自适应
+        window.addEventListener('resize', function() {
+            pieChart.resize(); barChart.resize(); graphChart.resize();
+        });
+    </script>
+</body>
+</html>

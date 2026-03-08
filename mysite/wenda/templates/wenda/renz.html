@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+ <head>
+    <title>问医</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 引入 Bootstrap -->
+    {% load static %}
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+    <style media="screen">
+
+    /* 输入框设置 */
+    textarea{
+      height:100px;
+      width: 100%;
+      resize: none;
+      outline:none;
+      resize: none;
+      overflow-y:auto;
+    }
+      .goTop {
+          height: 40px;
+          width: 40px;
+          background: #000000;
+          border-radius: 0px;
+          position: fixed;
+          top: 90%;
+          right: 3%;
+          display: none;
+          padding: 10px;
+          text-align: center;
+      }
+      .goTop span {
+          color: #fff;
+      }
+    </style>
+  </head>
+  <body style="background:#f5f5f5">
+    <div class="container col-xs-12 col-sm-8 col-sm-offset-2">
+     <!--头部开始-->
+     <header class="row" style="padding-bottom: 10px;background:#f5f5f5">
+       <nav class=""style="text-align:center; padding: 10px;">
+         <div class="col-xs-4 col-xs-offset-4" style="font-size: 20px;">
+           <a href="{% url 'wenda:index' %}" style="text-decoration:none;color:#333;">医疗问答</a>
+         </div>
+         <div class="col-xs-1 col-xs-offset-3">
+           <a href="{% url 'wenda:login'%}" style="text-decoration:none;color:#333;">
+             <img src="{% static 'wenda/images/user.png' %}" style="width:28px; height:28px;">
+          </a>
+        </div>
+       </nav>
+     </header>
+     <!--头部结束-->
+     <div class="" style="padding:15px;margin:20px">
+        <form action="{% url 'wenda:renz' %}" method="post">
+          {% csrf_token %}
+            <h2>请填写认证信息</h2>
+            <div>
+              姓名：<input id="" type="text" class="form-control" name="name" placeholder="" required="" />
+            </div>
+            <div>
+              医师资格证编号：<input id="" type="text" class="form-control" name="certificate" placeholder="" required="" />
+            </div>
+            <div>
+              所在省份：<input id="" type="text" class="form-control" name="hospital_region" placeholder="" required="" />
+            </div>
+            <div>
+              所在医院：<input id="" type="text" class="form-control" name="hospital" placeholder="" required="" />
+            </div>
+            <div>
+              所在科室：<input id="" type="text" class="form-control" name="department" placeholder="" required="" />
+            </div>
+              <div style="display: none;">
+                  <input id="next" type="text" name="next_url" value="{{ next_url }}" />
+              </div>
+            <div>
+                <button type="submit" class="btn btn-default" style="float: initial; margin-right: 60px">提交认证</button>
+            </div>
+        </form>
+     </div>
+     <div class="goTop">
+         <span class="glyphicon glyphicon-chevron-up"></span>
+     </div>
+     <!--footer开始-->
+     <footer class="row text-center" style="background:#333; height:50px; color:white;padding:20px">
+       <p>2025</p>
+     </footer>
+     <!--footer结束-->
+   </div>
+</body>
+<!--返回顶部开始-->
+<script type="text/javascript">
+    function goTop(min_height) {
+        $(".goTop").click(
+            function() {
+                $('html,body').animate({
+                    scrollTop: 0
+                }, 700);
+            });
+        //获取页面的最小高度，无传入值则默认为600像素
+        min_height=min_height?min_height:400;
+        //为窗口的scroll事件绑定处理函数
+        $(window).scroll(function() {
+            //获取窗口的滚动条的垂直位置
+            var s = $(window).scrollTop();
+            //当窗口的滚动条的垂直位置大于页面的最小高度时，让返回顶部元素渐现，否则渐隐
+            if (s > min_height) {
+                $(".goTop").fadeIn(100);
+            } else {
+                $(".goTop").fadeOut(200);
+            }
+        });
+    }
+
+    $(function() {
+        goTop();
+    });
+</script> <!--返回顶部函数结束-->

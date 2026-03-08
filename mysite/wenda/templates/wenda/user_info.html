@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>个人主页 - 医疗决策系统</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+    <style media="screen">
+        /* 全局背景与字体 */
+        body { background-color: #f4f7f9; font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif; }
+
+        /* 导航头部 */
+        header { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .nav-link-brand { font-size: 20px; font-weight: 700; color: #2c3e50; text-decoration: none !important; }
+        .nav-link-logout { color: #e74c3c !important; font-weight: 600; text-decoration: none !important; transition: 0.3s; }
+        .nav-link-logout:hover { opacity: 0.8; }
+
+        /* 搜索框美化 */
+        .search-container { margin-bottom: 25px; }
+        .form-control { height: 45px; border-radius: 22px 0 0 22px; border: 1px solid #dce4ec; padding-left: 20px; }
+        .form-control:focus { border-color: #3498db; box-shadow: none; }
+        .btn-search { height: 45px; border-radius: 0 22px 22px 0; background: #3498db; color: white; border: none; padding: 0 25px; transition: 0.3s; }
+        .btn-search:hover { background: #2980b9; color: white; }
+
+        /* 左侧问题列表卡片 */
+        .my-big-box {
+            background: white; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 20px !important; margin-top: 0 !important;
+        }
+        .my-bar-box {
+            border-bottom: 2px solid #3498db; margin-bottom: 15px; padding-bottom: 10px;
+            font-size: 18px; font-weight: 700; color: #2c3e50;
+        }
+        .my-small-box {
+            padding: 15px 0; border-bottom: 1px solid #f1f4f6; transition: 0.2s;
+        }
+        .my-small-box:hover { background-color: #fafcfd; }
+        .my-title { font-size: 18px; font-weight: 600; color: #34495e; margin-bottom: 8px; }
+        .my-content { font-size: 14px; color: #7f8c8d; line-height: 1.6; height: 44px; overflow: hidden; }
+        .my-date-reply { font-size: 12px; color: #bdc3c7; margin-top: 10px; }
+        .my-date-reply a { color: #e74c3c; font-weight: 600; }
+
+        /* 加载更多按钮 */
+        .more {
+            background: white; border-radius: 8px; color: #3498db;
+            margin: 15px 0 30px 0; padding: 12px; cursor: pointer;
+            font-weight: 600; border: 1px solid #eef2f4; transition: 0.3s; text-align: center;
+        }
+        .more:hover { background: #3498db; color: white; box-shadow: 0 4px 10px rgba(52,152,219,0.2); }
+
+        /* 右侧个人信息卡片 */
+        .profile-card {
+            background: white; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 0; margin-left: 15px; overflow: hidden;
+        }
+        .profile-header {
+            background: #f8fafc; padding: 15px 20px;
+            border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between;
+        }
+        .profile-header span { font-weight: 700; color: #2c3e50; }
+        .info-item { padding: 12px 20px; border-bottom: 1px solid #f8fafc; font-size: 14px; color: #5d6d7e; }
+        .info-label { color: #95a5a6; width: 80px; display: inline-block; }
+
+        /* 返回顶部 */
+        .goTop {
+            height: 45px; width: 45px; background: #2c3e50; border-radius: 50%;
+            position: fixed; top: 85%; right: 3%; display: none;
+            padding: 12px; text-align: center; color: white; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* 底部导航 */
+        .bottom-nav { height: 55px; position: fixed; bottom: 0; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+        .nav-item-dark { background: #2c3e50; color: white; height: 55px; padding: 16px; font-weight: 600; }
+        .nav-item-light { background: white; color: #2c3e50; height: 55px; padding: 16px; font-weight: 600; border-top: 1px solid #eee; }
+
+        footer { background: #2c3e50; color: #95a5a6; padding: 20px; margin-top: 40px; }
+    </style>
+</head>
+
+<body>
+    <div class="container col-xs-12 col-sm-8 col-sm-offset-2">
+        <!--头部开始-->
+        <header class="row">
+            <nav style="text-align:center; padding: 15px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="width: 80px;"></div> <!-- 占位平衡 -->
+                <a href="{% url 'wenda:index' %}" class="nav-link-brand">医疗决策系统</a>
+                <a href="{% url 'wenda:logout'%}" id='logout' class="nav-link-logout">退出</a>
+            </nav>
+        </header>
+
+        <!--搜索开始-->
+        <div class="row search-container">
+            <form action="{% url 'wenda:search' %}" method="POST">
+                {% csrf_token %}
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="搜索疾病、症状、药物..." id="search_text" name="search_text">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-search" onclick="onClick()">搜索</button>
+                    </span>
+                </div>
+            </form>
+        </div>
+
+        <!-- 主体内容-->
+        <div class="row">
+            <!-- 左侧栏 -->
+            <div class="col-sm-8" style="padding-left: 0;">
+                <div class="my-big-box" id="question">
+                    <div class="my-bar-box">相关问题记录</div>
+                </div>
+                <div class="more" id="question-more">查看更多历史问题</div>
+            </div>
+
+            <!--右侧栏-->
+            <div class="col-sm-4" style="padding-right: 0;">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <span>个人基本信息</span>
+                        <a href="{% url 'wenda:alter_info' %}" style="font-size: 13px; font-weight: 600;">修改</a>
+                    </div>
+                    <div class="info-item"><span class="info-label">用户名</span> {{data.username}}</div>
+                    <div class="info-item"><span class="info-label">邮箱</span> {{data.mail}}</div>
+                    <div class="info-item"><span class="info-label">出生日期</span> {{data.birth}}</div>
+                    <div class="info-item" style="border:none;"><span class="info-label">手机号</span> {{data.tel}}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="goTop">
+            <span class="glyphicon glyphicon-chevron-up"></span>
+        </div>
+
+        <footer class="row text-center">
+            <p style="margin:0; font-size: 13px;">© 2025 基层医疗辅助平台 | 个人中心</p>
+        </footer>
+        <div style="height: 80px;"></div> <!-- 底部留白 -->
+    </div>
+
+    <!--底部导航-->
+    <div class="container col-xs-12 col-sm-8 col-sm-offset-2 bottom-nav">
+        <a href="{% url 'wenda:wenda' %}">
+            <div class="col-xs-6 text-center nav-item-dark">智能问答</div>
+        </a>
+        <a href="{% url 'wenda:wenyi' %}">
+            <div class="col-xs-6 text-center nav-item-light">快速问医</div>
+        </a>
+    </div>
+
+    <!-- 异步加载脚本（逻辑完全保留） -->
+    <script type="text/javascript">
+        var username = '{{ data.name }}';
+        var page = 0;
+        var page_size = 2;
+        function getQuestion(){
+          $.ajax({
+              url: '/user/ajax/',
+              type: 'GET',
+              data: {'username': username, 'page': page, 'page_size': page_size},
+              success: function (data) {
+                  var data = eval(data);
+                  addQuestion(data.question_list);
+                  page += 1;
+                  if(data.question_list.length < page_size && data.question_list.length >=0 ){
+                    var question = document.getElementById('question');
+                    var div = document.createElement('div');
+                    div.style = "font-size: 14px; color:#bdc3c7; text-align: center; padding: 20px 0;";
+                    div.innerHTML = '已显示全部咨询问题';
+                    question.appendChild(div);
+                    $('#question-more').hide();
+                  }
+                }
+            })
+        }
+        function addQuestion(question_list){
+           for(var i in question_list){
+             var big_box = document.getElementById("question");
+             var small_box = document.createElement("div");
+             var newA = document.createElement("a");
+             var newTitle = document.createElement("div");
+             var newContent = document.createElement("div");
+             var newRow = document.createElement("div");
+             var leftSpan = document.createElement("span");
+             var rightA = document.createElement("a");
+
+             newA.href = '/question/' + question_list[i].id;
+             newA.style = "text-decoration:none; display:block;";
+             small_box.className = "my-small-box";
+
+             newTitle.innerHTML = question_list[i].title;
+             newTitle.className = 'my-title';
+
+             newContent.innerHTML = question_list[i].content;
+             newContent.className = 'my-content';
+
+             leftSpan.innerHTML = '<i class="glyphicon glyphicon-time"></i> ' + question_list[i].date + ' · ' + question_list[i].num_reply + '条回复';
+
+             rightA.innerHTML = '<i class="glyphicon glyphicon-trash"></i> 删除';
+             rightA.style = "float:right; color:#e74c3c; text-decoration:none;";
+             rightA.href = "/delete/question/" + question_list[i].id;
+
+             newRow.className = 'my-date-reply';
+             newRow.appendChild(leftSpan);
+             newRow.appendChild(rightA);
+             newA.appendChild(newTitle);
+             newA.appendChild(newContent);
+             small_box.appendChild(newA);
+             small_box.appendChild(newRow);
+             big_box.appendChild(small_box);
+           }
+        }
+        window.onload = function(){
+            setTimeout(function(){ $(window).scrollTop(0); getQuestion(); },10);
+        };
+        $('#question-more').click(function(){ getQuestion(); });
+    </script>
+
+    <!-- 返回顶部脚本（逻辑完全保留） -->
+    <script type="text/javascript">
+        function goTop(min_height) {
+            $(".goTop").click(function() { $('html,body').animate({ scrollTop: 0 }, 700); });
+            min_height = min_height ? min_height : 400;
+            $(window).scroll(function() {
+                var s = $(window).scrollTop();
+                if (s > min_height) { $(".goTop").fadeIn(100); }
+                else { $(".goTop").fadeOut(200); }
+            });
+        }
+        $(function() { goTop(); });
+    </script>
+</body>
+</html>

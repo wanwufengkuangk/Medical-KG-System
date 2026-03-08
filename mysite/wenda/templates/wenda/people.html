@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>人群分类索引 - 基层医疗辅助决策平台</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <!-- 引入资源 -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+
+    <style media="screen">
+        /* 1. 全局布局样式 (与全站一致) */
+        body { background-color: #f0f2f5; font-family: "Microsoft YaHei", sans-serif; overflow-x: hidden; margin: 0; }
+
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 220px;
+            background: #2c3e50; color: white; padding-top: 20px; z-index: 1000;
+        }
+        .sidebar-brand { text-align: center; padding: 20px 10px; border-bottom: 1px solid #3e4f5f; margin-bottom: 20px; }
+        .sidebar-nav a {
+            display: block; color: #abb1b7; padding: 15px 25px; text-decoration: none; transition: 0.3s;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: #1a252f; color: #3498db; border-left: 4px solid #3498db; text-decoration: none; }
+        .sidebar-nav i { margin-right: 10px; }
+
+        .main-wrapper { margin-left: 220px; padding: 20px; }
+        .workstation-header {
+            background: white; padding: 15px 25px; margin-bottom: 20px;
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* 2. 人群选择器美化 (Tabs 风格) */
+        .people-filter-card {
+            background: white; border-radius: 12px; padding: 10px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px;
+        }
+        .people {
+            display: flex; list-style: none; padding: 0; margin: 0; justify-content: space-around;
+        }
+        .people li {
+            padding: 15px 30px; cursor: pointer; color: #606266; font-weight: bold;
+            transition: 0.3s; border-bottom: 3px solid transparent; font-size: 15px;
+        }
+        .people li:hover { color: #3498db; }
+        /* 选中状态 */
+        .people li.selected {
+            color: #3498db; border-bottom: 3px solid #3498db; background: rgba(52, 152, 219, 0.05);
+        }
+
+        /* 3. 疾病列表高级感重塑 (红框部分) */
+        #disease { margin-top: 10px; }
+
+        /* 标题条 */
+        #disease .my-bar-box {
+            background: transparent !important;
+            border-bottom: 2px solid #3498db !important;
+            padding: 0 5px 10px 5px !important;
+            margin-bottom: 25px !important;
+            font-size: 18px !important;
+            color: #2c3e50 !important;
+            font-weight: bold !important;
+        }
+
+        /* 疾病独立卡片 */
+        #disease .my-small-box {
+            background: white !important;
+            margin: 0 0 20px 0 !important;
+            padding: 25px !important;
+            border-radius: 12px !important;
+            border: 1px solid #edf2fc !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
+            transition: all 0.3s ease !important;
+            display: block !important;
+            text-decoration: none !important;
+        }
+        #disease .my-small-box:hover {
+            transform: translateY(-5px) !important;
+            box-shadow: 0 12px 24px rgba(52, 152, 219, 0.12) !important;
+        }
+
+        #disease .title { color: #2c3e50 !important; font-size: 19px !important; font-weight: bold !important; margin-bottom: 12px !important; }
+        #disease .dept {
+            background: #eef5ff !important; color: #3498db !important; font-size: 12px !important;
+            padding: 2px 10px !important; border-radius: 20px !important; margin-left: 10px !important;
+            border: 1px solid #d9ecff !important; font-weight: normal;
+        }
+        #disease .brief {
+            color: #606266 !important; font-size: 14px !important; line-height: 1.8 !important;
+            max-height: 75px !important; overflow: hidden !important; margin: 10px 0 !important;
+        }
+        #disease .symptom {
+            color: #909399 !important; font-size: 13px !important; background: #f8fafc !important;
+            padding: 10px !important; border-radius: 6px !important; margin: 0 !important;
+        }
+        #disease .reach-left { color: #3498db !important; font-weight: bold !important; margin-right: 8px !important; }
+
+        .goTop {
+            height: 40px; width: 40px; background: #2c3e50; color: white;
+            position: fixed; bottom: 50px; right: 30px; display: none;
+            text-align: center; line-height: 40px; border-radius: 4px; cursor: pointer; z-index: 1001;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 左侧导航栏 -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h4>医疗决策系统</h4>
+            <p style="font-size: 10px; color: #888;">Primary Medical Platform</p>
+        </div>
+        <div class="sidebar-nav">
+            <a href="{% url 'wenda:index' %}"><i class="glyphicon glyphicon-home"></i> <span>诊疗工作台</span></a>
+            <a href="{% url 'wenda:wenda' %}"><i class="glyphicon glyphicon-comment"></i> <span>智能问答</span></a>
+            <a href="{% url 'wenda:wenyi' %}"><i class="glyphicon glyphicon-edit"></i> <span>快速问医</span></a>
+            <a href="{% url 'wenda:department' '全部科室' %}"><i class="glyphicon glyphicon-th-list"></i> <span>科室索引</span></a>
+            <a href="{% url 'wenda:login' %}"><i class="glyphicon glyphicon-user"></i> <span>个人中心</span></a>
+        </div>
+    </div>
+
+    <!-- 右侧主体区 -->
+    <div class="main-wrapper">
+        <header class="workstation-header">
+            <div><span class="text-muted">当前位置：</span> <strong>特定人群健康百科</strong></div>
+            <div><span class="label label-success"><i class="glyphicon glyphicon-user"></i> 实时分类筛选</span></div>
+        </header>
+
+        <!-- 人群选择卡片 (保持原始 class="people" 兼容 JS) -->
+        <div class="people-filter-card shadow-sm">
+            <ul class="people">
+                <li>全部人群</li>
+                <li>男性群体</li>
+                <li>女性群体</li>
+                <li>老年群体</li>
+                <li>儿童群体</li>
+            </ul>
+        </div>
+
+        <!-- 查询结果 (保持原始 ID 兼容 JS) -->
+        <div id="disease">
+            <div class="row my-bar-box">
+                <span id="people-name">{{data.population}}相关的疾病</span>
+            </div>
+            <!-- 由 disease.js 自动填充 -->
+        </div>
+
+        <footer class="text-center text-muted" style="margin-top: 50px; padding-bottom: 20px;">
+            <p>© 2025 基层医疗辅助决策平台 | 数据安全保护开启</p>
+        </footer>
+    </div>
+
+    <div class="goTop">
+        <span class="glyphicon glyphicon-chevron-up"></span>
+    </div>
+
+    <!-- 脚本引入：必须按此顺序 -->
+    <script type="text/javascript" src="{% static 'wenda/js/main.js' %}"></script>
+    <script type="text/javascript" src="{% static 'wenda/js/disease.js' %}"></script>
+    <script type="text/javascript" src="{% static 'wenda/js/people.js' %}"></script>
+
+    <!-- 核心逻辑：保持 100% 原始逻辑 -->
+    <script type="text/javascript">
+        var jsonDate = {{ data|safe }};
+        var population_name = jsonDate.population;
+        var page = 0;
+        var page_size = 5;
+
+        window.onload = function(){
+           setTimeout(function(){
+               $(window).scrollTop(0);
+               // people 数组由 people.js 定义
+               for(var i = 0, len = people_list.length; i < len; i++) {
+                 if(people_list[i] == population_name) {
+                     // 移除其他选中项
+                     $(".people li").removeClass("selected");
+                     // 这里的 people[i] 是 people.js 里抓取的 DOM 数组
+                     people[i].className = 'selected';
+
+                     removeDiseasePeople();
+                     document.getElementById("people-name").innerHTML = people_list[i] + "相关的疾病";
+                     getDiseasePeople();
+                 }
+               }
+           }, 10);
+        };
+
+        // 滚动加载逻辑
+        $(window).scroll(function(){
+            var scrollTop = $(this).scrollTop();
+            var scrollHeight = $(document).height();
+            var clientHeight = $(this).height();
+            if(scrollTop + clientHeight + 1 >= scrollHeight){
+              getDiseasePeople();
+            }
+            // 返回顶部显隐
+            if (scrollTop > 400) { $(".goTop").fadeIn(100); }
+            else { $(".goTop").fadeOut(200); }
+        });
+
+        // 返回顶部点击
+        $(".goTop").click(function() { $('html,body').animate({scrollTop: 0}, 500); });
+    </script>
+</body>
+</html>

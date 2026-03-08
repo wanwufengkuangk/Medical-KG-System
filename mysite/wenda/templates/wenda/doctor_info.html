@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <title>个人中心 - 基层医疗辅助决策平台</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <!-- 引入资源 -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+
+    <style media="screen">
+        body { background-color: #f0f2f5; font-family: "Microsoft YaHei", sans-serif; overflow-x: hidden; margin: 0; }
+        .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 220px; background: #2c3e50; color: white; padding-top: 20px; z-index: 1000; }
+        .sidebar-brand { text-align: center; padding: 20px 10px; border-bottom: 1px solid #3e4f5f; margin-bottom: 20px; }
+        .sidebar-nav a { display: block; color: #abb1b7; padding: 15px 25px; text-decoration: none; transition: 0.3s; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: #1a252f; color: #3498db; border-left: 4px solid #3498db; text-decoration: none; }
+        .main-wrapper { margin-left: 220px; padding: 20px; }
+        .workstation-header { background: white; padding: 15px 25px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+
+        .profile-card { background: white; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 4px solid #3498db; }
+        .profile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .profile-header h5 { font-weight: bold; margin: 0; color: #2c3e50; }
+        .info-list { list-style: none; padding: 0; margin: 0; }
+        .info-list li { padding: 10px 0; border-bottom: 1px dashed #f0f0f0; display: flex; justify-content: space-between; }
+        .info-label { color: #7f8c8d; }
+        .info-value { color: #2c3e50; font-weight: 500; }
+
+        .badge-status { padding: 5px 12px; border-radius: 4px; font-size: 12px; }
+        .status-ok { background: #eefaf3; color: #2ecc71; border: 1px solid #2ecc71; }
+        .status-wait { background: #fff8ec; color: #f39c12; border: 1px solid #f39c12; }
+        .status-none { background: #fdf2f2; color: #e74c3c; border: 1px solid #e74c3c; }
+
+        .section-title { font-weight: bold; margin-bottom: 20px; border-left: 4px solid #3498db; padding-left: 12px; }
+        .question-card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); border: 1px solid #edf2f6; transition: 0.3s; }
+        .question-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
+        .my-title { font-size: 16px; font-weight: bold; color: #3498db; margin-bottom: 10px; display: block; text-decoration: none;}
+        .my-title:hover { text-decoration: underline; color: #2980b9;}
+        .my-content { color: #666; font-size: 14px; line-height: 1.6; height: 45px; overflow: hidden; margin-bottom: 15px; }
+        .my-footer { display: flex; justify-content: space-between; font-size: 13px; color: #95a5a6; border-top: 1px solid #f9f9f9; padding-top: 10px; }
+
+        .more-btn { background: white; border: 1px solid #dcdfe6; color: #606266; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .more-btn:hover { background: #f5f7fa; color: #3498db; }
+        .goTop { height: 40px; width: 40px; background: #2c3e50; color: white; position: fixed; bottom: 50px; right: 30px; display: none; text-align: center; line-height: 40px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <!-- 侧边栏保持不变 -->
+        <div class="sidebar-brand"><h4>医疗决策系统</h4><p style="font-size: 10px; color: #888;">Primary Medical Platform</p></div>
+        <div class="sidebar-nav">
+            <a href="{% url 'wenda:index' %}"><i class="glyphicon glyphicon-home"></i> <span>诊疗工作台</span></a>
+            <a href="{% url 'wenda:wenda' %}"><i class="glyphicon glyphicon-comment"></i> <span>智能问答</span></a>
+            <a href="{% url 'wenda:wenyi' %}"><i class="glyphicon glyphicon-edit"></i> <span>快速问医</span></a>
+            <a href="{% url 'wenda:department' '全部科室' %}"><i class="glyphicon glyphicon-th-list"></i> <span>科室索引</span></a>
+            <a href="{% url 'wenda:login' %}" class="active"><i class="glyphicon glyphicon-user"></i> <span>个人中心</span></a>
+        </div>
+    </div>
+
+    <div class="main-wrapper">
+        <header class="workstation-header">
+            <div><span class="text-muted">欢迎回来，</span> <strong>{{data.username}}</strong></div>
+            <div><a href="{% url 'wenda:logout' %}" class="btn btn-sm btn-link text-danger"><i class="glyphicon glyphicon-log-out"></i> 退出登录</a></div>
+        </header>
+
+        <div class="row" style="margin-bottom: 25px;">
+            <div class="col-md-12">
+                <form action="{% url 'wenda:search' %}" method="POST" class="input-group">
+                    {% csrf_token %}
+                    <input type="text" class="form-control" style="height: 45px;" placeholder="搜索疾病、症状、药物..." name="search_text">
+                    <span class="input-group-btn"><button class="btn btn-primary" type="submit" style="height: 45px; padding: 0 30px;">全库搜索</button></span>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="section-title">回复记录 / 问诊历史</div>
+                <div id="question"></div>
+                <button class="more-btn" id="question-more">加载更多历史记录</button>
+            </div>
+
+            <div class="col-md-4">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <h5><i class="glyphicon glyphicon-info-sign"></i> 账户信息</h5>
+                        <a href="{% url 'wenda:alter_info' %}" class="btn btn-xs btn-default">修改</a>
+                    </div>
+                    <ul class="info-list">
+                        <li><span class="info-label">登录账号</span><span class="info-value">{{data.username}}</span></li>
+                        <li><span class="info-label">绑定邮箱</span><span class="info-value">{{data.mail}}</span></li>
+                        <li><span class="info-label">出生日期</span><span class="info-value">{{data.birth}}</span></li>
+                        <li><span class="info-label">联系电话</span><span class="info-value">{{data.tel}}</span></li>
+                    </ul>
+
+                    <div class="profile-header" style="margin-top: 30px;">
+                        <h5><i class="glyphicon glyphicon-certificate"></i> 医师认证</h5>
+                    </div>
+                    <ul class="info-list">
+                        {% if data.confirmed == 1 %}
+                            <li><span class="info-label">认证状态</span><span class="badge-status status-ok">已通过实名认证</span></li>
+                            <li><span class="info-label">真实姓名</span><span class="info-value">{{data.name}}</span></li>
+                            <li><span class="info-label">所属医院</span><span class="info-value">{{data.hospital}}</span></li>
+                            <li><span class="info-label">负责科室</span><span class="info-value">{{data.department}}</span></li>
+                        {% elif data.confirmed == -1 %}
+                            <li><span class="info-label">认证状态</span><span class="badge-status status-wait">审核中，请耐心等待</span></li>
+                        {% else %}
+                            <li><span class="info-label">认证状态</span><span class="badge-status status-none">医师未认证</span></li>
+                            <li style="border:none;"><a href="{% url 'wenda:renz' %}" class="btn btn-primary btn-block btn-sm">立即去认证</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center text-muted" style="margin-top: 50px; padding-bottom: 20px;"><p>© 2025 基层医疗辅助决策平台 | 数据安全中心</p></footer>
+    </div>
+    <div class="goTop"><span class="glyphicon glyphicon-chevron-up"></span></div>
+
+    <script type="text/javascript">
+        // 核心修复点：这里必须取 data.username，不能取 data.name
+        var username = '{{ data.username|safe }}';
+        var page = 0;
+        var page_size = 5;
+
+        function getQuestion(){
+          $.ajax({
+              url: '/doctor/ajax/',
+              type: 'GET',
+              data: {'username': username, 'page': page, 'page_size': page_size},
+              success: function (data) {
+                  // 增加对非字符串 JSON 的兼容
+                  var res = typeof data === 'string' ? eval("(" + data + ")") : data;
+                  addQuestion(res.reply_list);
+                  page += 1;
+                  if(res.reply_list.length < page_size){
+                    $('#question-more').text('无更多数据').attr('disabled', true);
+                  }
+                },
+              error: function(err) { console.log("加载失败", err); }
+            })
+        }
+
+        function addQuestion(reply_list){
+           var big_box = document.getElementById("question");
+           for(var i in reply_list){
+             var card = document.createElement("div");
+             card.className = "question-card";
+
+             var contentHtml = `
+                <a href="/question/${reply_list[i].question_id}" class="my-title">
+                    <i class="glyphicon glyphicon-question-sign"></i> 问题：${reply_list[i].question_title}
+                </a>
+                <div class="my-content">回复摘要：${reply_list[i].content}</div>
+                <div class="my-footer">
+                    <span><i class="glyphicon glyphicon-time"></i> 回复于：${reply_list[i].date}</span>
+                    <a href="/delete/reply/${reply_list[i].id}" class="text-danger">删除记录</a>
+                </div>
+             `;
+             card.innerHTML = contentHtml;
+             big_box.appendChild(card);
+           }
+        }
+
+        window.onload = function(){ getQuestion(); };
+        $('#question-more').click(function(){ getQuestion(); });
+
+        $(function() {
+            $(window).scroll(function() { if ($(window).scrollTop() > 400) $(".goTop").fadeIn(100); else $(".goTop").fadeOut(200); });
+            $(".goTop").click(function() { $('html,body').animate({scrollTop: 0}, 500); });
+        });
+    </script>
+</body>
+</html>

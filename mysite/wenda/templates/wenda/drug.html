@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <title>药物百科 - 基层医疗辅助决策平台</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <!-- 引入资源 -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+
+    <style media="screen">
+        /* 1. 全局布局样式 (与全站一致) */
+        body { background-color: #f0f2f5; font-family: "Microsoft YaHei", sans-serif; overflow-x: hidden; margin: 0; }
+
+        /* 左侧导航栏 */
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 220px;
+            background: #2c3e50; color: white; padding-top: 20px; z-index: 1000;
+        }
+        .sidebar-brand { text-align: center; padding: 20px 10px; border-bottom: 1px solid #3e4f5f; margin-bottom: 20px; }
+        .sidebar-brand h4 { margin: 0; font-size: 18px; font-weight: bold; }
+        .sidebar-nav a {
+            display: block; color: #abb1b7; padding: 15px 25px; text-decoration: none; transition: 0.3s;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: #1a252f; color: #3498db; border-left: 4px solid #3498db; text-decoration: none; }
+        .sidebar-nav i { margin-right: 10px; }
+
+        /* 右侧主体内容区 */
+        .main-wrapper { margin-left: 220px; padding: 20px; }
+        .workstation-header {
+            background: white; padding: 15px 25px; margin-bottom: 20px;
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* 2. 药物档案卡片美化 */
+        .drug-card {
+            background: white; border-radius: 12px; padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 4px solid #2ecc71; /* 药物用绿色系标识 */
+        }
+
+        /* 保持原有的折叠逻辑类名，但加入平滑过渡 */
+        .drug-big-box { height: 600px; overflow: hidden; position: relative; transition: all 0.5s ease; }
+        .drug-big-box-auto { height: auto; transition: all 0.5s ease; }
+
+        /* 药物小项美化 */
+        .drug-small-box {
+            margin: 0; border-bottom: 1px solid #f0f2f5; padding: 20px 0;
+        }
+        .drug-small-box:last-child { border-bottom: none; }
+
+        .drug-title {
+            color: #3498db; font-size: 15px; font-weight: bold;
+            margin-bottom: 10px; border-left: 4px solid #3498db; padding-left: 10px;
+        }
+        .drug-txt {
+            color: #444; font-size: 15px; line-height: 1.8; margin-left: 14px;
+        }
+
+        /* 加载更多按钮美化 */
+        .drug-more {
+            background: white; border: 1px solid #dcdfe6; border-radius: 0 0 12px 12px;
+            text-align: center; padding: 12px; cursor: pointer; transition: 0.3s;
+            color: #3498db; font-weight: bold; margin-bottom: 30px; border-top: 1px dashed #eee;
+        }
+        .drug-more:hover { background: #f9fbff; color: #2980b9; }
+
+        /* 返回顶部 */
+        .goTop {
+            height: 40px; width: 40px; background: #2c3e50; color: white;
+            position: fixed; bottom: 50px; right: 30px; display: none;
+            text-align: center; line-height: 40px; border-radius: 4px; cursor: pointer; z-index: 1001;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 左侧导航栏 (全站统一) -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h4>医疗决策系统</h4>
+            <p style="font-size: 10px; color: #888;">Primary Medical Platform</p>
+        </div>
+        <div class="sidebar-nav">
+            <a href="{% url 'wenda:index' %}"><i class="glyphicon glyphicon-home"></i> <span>诊疗工作台</span></a>
+            <a href="{% url 'wenda:wenda' %}"><i class="glyphicon glyphicon-comment"></i> <span>智能问答</span></a>
+            <a href="{% url 'wenda:wenyi' %}"><i class="glyphicon glyphicon-edit"></i> <span>快速问医</span></a>
+            <a href="{% url 'wenda:department' '全部科室' %}"><i class="glyphicon glyphicon-th-list"></i> <span>科室索引</span></a>
+            <a href="{% url 'wenda:login' %}"><i class="glyphicon glyphicon-user"></i> <span>个人中心</span></a>
+        </div>
+    </div>
+
+    <!-- 右侧主体内容 -->
+    <div class="main-wrapper">
+        <header class="workstation-header">
+            <div><span class="text-muted">当前位置：</span> <strong>药物临床决策百科</strong></div>
+            <div id="feedback">
+                <!-- 由 JS 动态填入反馈 -->
+            </div>
+        </header>
+
+        <!-- 药物详细信息容器 (保持原有 ID 和类名逻辑) -->
+        <div class="drug-card">
+            <div class="row drug-big-box">
+                <!-- 通用名称 -->
+                <div class="row drug-small-box">
+                    <div class="drug-title">通用名称</div>
+                    <div class="drug-txt" id="drug" style="font-size: 24px; font-weight: bold; color: #2c3e50;"></div>
+                </div>
+
+                <!-- 功能主治 -->
+                <div class="row drug-small-box">
+                    <div class="drug-title">功能主治</div>
+                    <div class="drug-txt" id="func"></div>
+                </div>
+
+                <!-- 用法用量 -->
+                <div class="row drug-small-box">
+                    <div class="drug-title">用法用量</div>
+                    <div class="drug-txt" id="usage"></div>
+                </div>
+
+                <!-- 剂型 -->
+                <div class="row drug-small-box">
+                    <div class="drug-title">剂型</div>
+                    <div class="drug-txt" id="form"></div>
+                </div>
+
+                <!-- 成份 -->
+                <div class="row drug-small-box">
+                    <div class="drug-title">成份</div>
+                    <div class="drug-txt" id="component"></div>
+                </div>
+
+                <!-- 不良反应 -->
+                <div class="row drug-small-box">
+                    <div class="drug-title">不良反应</div>
+                    <div class="drug-txt" id="effects" style="color: #e67e22;"></div>
+                </div>
+
+                <!-- 禁忌 -->
+                <div class="row drug-small-box">
+                    <div class="drug-title">禁忌</div>
+                    <div class="drug-txt" id="avoid" style="color: #e74c3c; font-weight: bold;"></div>
+                </div>
+
+                <!-- 注意事项 -->
+                <div class="row drug-small-box">
+                    <div class="drug-title">注意事项</div>
+                    <div class="drug-txt" id="matters"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 展开按钮 (保持原有类名逻辑) -->
+        <div class="drug-more shadow-sm">
+            <div style="padding:5px 0">
+                <span id="more-text"><i class="glyphicon glyphicon-menu-down"></i> 点击查看完整药品说明</span>
+            </div>
+        </div>
+
+        <footer class="text-center text-muted" style="margin-top: 50px; padding-bottom: 20px;">
+            <p>© 2025 基层医疗辅助决策平台 | 用药安全警示系统</p>
+        </footer>
+    </div>
+
+    <!-- 返回顶部 -->
+    <div class="goTop">
+        <span class="glyphicon glyphicon-chevron-up"></span>
+    </div>
+
+    <!-- 逻辑代码部分 -->
+    <script type="text/javascript" src="{% static 'wenda/js/drug.js' %}"></script>
+    <script type="text/javascript">
+        // 1. 初始化药物数据 (保留原逻辑)
+        var drug_info = {{ drug_info|safe }};
+        drugInfo(drug_info);
+
+        // 2. 反馈逻辑 (保留原逻辑)
+        function getCookie(cname){
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0; i<ca.length; i++) {
+                var c = ca[i].trim();
+                if (c.indexOf(name)==0) { return c.substring(name.length,c.length); }
+            }
+            return "";
+        }
+        var user_role = getCookie("user_role");
+        if(user_role == 'doctor'){
+            $("#feedback").html('<a href="{% url 'wenda:feedback' 'drug'%}" class="btn btn-warning btn-xs"><i class="glyphicon glyphicon-edit"></i> 修正药物信息</a>');
+        }
+
+        // 3. 展开更多逻辑 (修正版美化逻辑)
+        var isExpanded = false;
+        $('.drug-more').click(function(){
+            var $box = $(this).prev().find('.row:first'); // 找到内容容器
+            if(!isExpanded){
+                $("#more-text").html('<i class="glyphicon glyphicon-menu-up"></i> 收起说明书');
+                isExpanded = true;
+            } else {
+                $("#more-text").html('<i class="glyphicon glyphicon-menu-down"></i> 点击查看完整药品说明');
+                isExpanded = true; // 这里的逻辑由 toggleClass 控制，设为 true 仅占位
+                isExpanded = false;
+            }
+            // 保持原有的类切换逻辑
+            $(this).prev().find('.row:first').toggleClass("drug-big-box drug-big-box-auto");
+        });
+
+        // 4. 返回顶部逻辑
+        $(function() {
+            $(window).scroll(function() {
+                if ($(window).scrollTop() > 400) { $(".goTop").fadeIn(100); }
+                else { $(".goTop").fadeOut(200); }
+            });
+            $(".goTop").click(function() { $('html,body').animate({scrollTop: 0}, 500); });
+        });
+    </script>
+</body>
+</html>

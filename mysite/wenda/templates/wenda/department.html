@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <title>科室百科索引 - 基层医疗辅助决策平台</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <!-- 引入资源 -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+
+    <style media="screen">
+        /* 1. 全局布局样式 (与全站保持一致) */
+        body { background-color: #f0f2f5; font-family: "Microsoft YaHei", sans-serif; overflow-x: hidden; margin: 0; }
+
+        /* 左侧导航栏 */
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 220px;
+            background: #2c3e50; color: white; padding-top: 20px; z-index: 1000;
+        }
+        .sidebar-brand { text-align: center; padding: 20px 10px; border-bottom: 1px solid #3e4f5f; margin-bottom: 20px; }
+        .sidebar-brand h4 { margin: 0; font-size: 18px; font-weight: bold; }
+        .sidebar-nav a {
+            display: block; color: #abb1b7; padding: 15px 25px; text-decoration: none; transition: 0.3s;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: #1a252f; color: #3498db; border-left: 4px solid #3498db; text-decoration: none; }
+        .sidebar-nav i { margin-right: 10px; }
+
+        /* 右侧主体内容区 */
+        .main-wrapper { margin-left: 220px; padding: 20px; }
+        .workstation-header {
+            background: white; padding: 15px 25px; margin-bottom: 20px;
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* 2. 科室筛选器卡片美化 */
+        .selector-card {
+            background: #3498db; padding: 25px; border-radius: 8px;
+            margin-bottom: 30px; color: white; box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+        }
+        .selector-card label { font-size: 13px; margin-bottom: 8px; display: block; opacity: 0.9; }
+        .selector-card select {
+            height: 45px !important; border-radius: 6px !important; border: none !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 14px; color: #333;
+        }
+
+        /* 3. --- 核心：重塑疾病列表 UI (红框部分) --- */
+
+        /* 结果容器 */
+        #disease { margin-top: 10px; }
+
+        /* 科室名称标题条 */
+        #disease .my-bar-box {
+            background: transparent !important;
+            border-bottom: 2px solid #3498db !important;
+            padding: 0 5px 10px 5px !important;
+            margin-bottom: 25px !important;
+            font-size: 20px !important;
+            color: #2c3e50 !important;
+            font-weight: bold !important;
+        }
+
+        /* 疾病独立卡片 */
+        #disease .my-small-box {
+            background: white !important;
+            margin: 0 0 20px 0 !important;
+            padding: 25px !important;
+            border-radius: 12px !important;
+            border: 1px solid #edf2fc !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
+            transition: all 0.3s ease !important;
+            position: relative;
+            display: block !important;
+            text-decoration: none !important;
+        }
+
+        /* 悬停动效 */
+        #disease .my-small-box:hover {
+            transform: translateY(-5px) !important;
+            box-shadow: 0 12px 24px rgba(52, 152, 219, 0.12) !important;
+            border-color: #d9ecff !important;
+        }
+
+        /* 疾病标题 */
+        #disease .title {
+            color: #2c3e50 !important;
+            font-size: 20px !important;
+            font-weight: bold !important;
+            height: auto !important;
+            margin-bottom: 12px !important;
+            overflow: visible !important;
+        }
+
+        /* 科室标签 [妇科] */
+        #disease .dept {
+            background: #eef5ff !important;
+            color: #3498db !important;
+            font-size: 12px !important;
+            padding: 2px 12px !important;
+            border-radius: 20px !important;
+            margin-left: 10px !important;
+            font-weight: normal !important;
+            border: 1px solid #d9ecff !important;
+            vertical-align: middle;
+        }
+
+        /* 简介描述 */
+        #disease .brief {
+            color: #606266 !important;
+            font-size: 14px !important;
+            line-height: 1.8 !important;
+            height: auto !important;
+            max-height: 80px !important;
+            overflow: hidden !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 3 !important; /* 最多三行 */
+            -webkit-box-orient: vertical !important;
+            margin: 15px 0 !important;
+            padding-bottom: 15px !important;
+            border-bottom: 1px solid #f5f7fa !important;
+        }
+
+        /* 症状标签块 */
+        #disease .symptom {
+            color: #909399 !important;
+            font-size: 13px !important;
+            height: auto !important;
+            background: #f8fafc !important;
+            padding: 12px !important;
+            border-radius: 8px !important;
+            margin: 0 !important;
+            line-height: 1.5;
+        }
+
+        #disease .reach-left {
+            color: #3498db !important;
+            font-weight: bold !important;
+            margin-right: 8px !important;
+        }
+
+        /* 返回顶部 */
+        .goTop {
+            height: 40px; width: 40px; background: #2c3e50; color: white;
+            position: fixed; bottom: 50px; right: 30px; display: none;
+            text-align: center; line-height: 40px; border-radius: 4px; cursor: pointer; z-index: 1001;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 左侧导航栏 -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h4>医疗决策系统</h4>
+            <p style="font-size: 10px; color: #888;">Primary Medical Platform</p>
+        </div>
+        <div class="sidebar-nav">
+            <a href="{% url 'wenda:index' %}"><i class="glyphicon glyphicon-home"></i> <span>诊疗工作台</span></a>
+            <a href="{% url 'wenda:wenda' %}"><i class="glyphicon glyphicon-comment"></i> <span>智能问答</span></a>
+            <a href="{% url 'wenda:wenyi' %}"><i class="glyphicon glyphicon-edit"></i> <span>快速问医</span></a>
+            <a href="{% url 'wenda:department' '全部科室' %}" class="active"><i class="glyphicon glyphicon-th-list"></i> <span>科室索引</span></a>
+            <a href="{% url 'wenda:login' %}"><i class="glyphicon glyphicon-user"></i> <span>个人中心</span></a>
+        </div>
+    </div>
+
+    <!-- 右侧内容区 -->
+    <div class="main-wrapper">
+        <header class="workstation-header">
+            <div><span class="text-muted">当前位置：</span> <strong>医学百科科室索引库</strong></div>
+            <div>
+                <span class="label label-info" style="padding: 5px 10px;">
+                    <i class="glyphicon glyphicon-refresh"></i> 数据同步自 Neo4j
+                </span>
+            </div>
+        </header>
+
+        <!-- 科室筛选区 -->
+        <div class="selector-card">
+            <div class="row">
+                <div class="col-xs-6">
+                    <label>选择一级科室</label>
+                    <select name="dept_first" id="dept_first" class='dept_first form-control'>
+                        <option value="全部科室">全部一级科室</option>
+                    </select>
+                </div>
+                <div class="col-xs-6">
+                    <label>选择二级科室 (细分分类)</label>
+                    <select name="dept_second" id="dept_second" class='dept_second form-control'>
+                        <option value="全部二级科室">全部二级科室</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 查询结果展示区 -->
+        <div id="disease">
+            <div class="row my-bar-box">
+                <span id="dept_first-name">{{data.department}}</span>
+            </div>
+            <!-- 这里由外部脚本 disease.js 动态注入内容 -->
+        </div>
+
+        <footer class="text-center text-muted" style="margin-top: 50px; padding-bottom: 20px;">
+            <p>© 2025 基层医疗辅助决策平台 | 数据安全保护已开启</p>
+        </footer>
+    </div>
+
+    <div class="goTop">
+        <span class="glyphicon glyphicon-chevron-up"></span>
+    </div>
+
+    <!-- 脚本引入：顺序必须保持一致 -->
+    <script type="text/javascript" src="{% static 'wenda/js/main.js' %}"></script>
+    <script type="text/javascript" src="{% static 'wenda/js/depart.js' %}"></script>
+    <script type="text/javascript" src="{% static 'wenda/js/disease.js' %}"></script>
+
+    <!-- 业务逻辑：原封不动保留你的原始代码 -->
+    <script type="text/javascript">
+      var jsonDate = {{ data|safe }};
+      var department_name = jsonDate.department;
+      var page = 0;
+      var page_size = 5;
+
+      // 一级科室改变
+      $(".dept_first").change(function () {
+        $(".dept_second").empty();
+        $(".dept_second").append("<option value='全部二级科室'>全部二级科室</option>");
+        if($(this).val() != "全部科室"){
+          var dept_seconds = dept_second[$(this).val()];
+          for (var i = 0; i < dept_seconds.length; i++) {
+            $option = $("<option/>");
+            $option.attr("value", dept_seconds[i]);
+            $option.text(dept_seconds[i]);
+            $(".dept_second").append($option);
+           }
+        }
+        removeDiseaseDept();
+        document.getElementById("dept_first-name").innerHTML = $(this).val();
+        department_name = $(this).val();
+        page = 0;
+        getDiseaseDept();
+       });
+
+       // 二级科室改变
+       $(".dept_second").change(function () {
+          removeDiseaseDept();
+          document.getElementById("dept_first-name").innerHTML = $(".dept_first").val();
+          if($(this).val() != '全部二级科室'){
+            department_name = $(this).val();
+          }
+          else {
+            department_name = $(".dept_first").val();
+          }
+          page = 0;
+          getDiseaseDept();
+        });
+
+       // 获取疾病信息列表 (AJAX)
+       function getDiseaseDept() {
+         $.ajax({
+             url: "{% url 'wenda:department_ajax' %}",
+             type: 'GET',
+             data: {'department_name': department_name, 'page': page, 'page_size': page_size},
+             success: function (data) {
+                 var data = eval(data);
+                 addDisease(data.disease_list); // 此函数位于 disease.js
+                 page += 1;
+                 if(data.disease_list.length < page_size) return 0;
+               }
+           })
+       };
+
+      window.onload = function(){
+          setTimeout(function(){
+              $(window).scrollTop(0);
+              $(".dept_first").val(department_name);
+              $(".dept_second").empty();
+              $(".dept_second").append("<option value='全部二级科室'>全部二级科室</option>");
+              if(department_name != "全部科室"){
+                var dept_seconds = dept_second[department_name];
+                if(dept_seconds){
+                    for (var i = 0; i < dept_seconds.length; i++) {
+                      $option = $("<option/>");
+                      $option.attr("value", dept_seconds[i]);
+                      $option.text(dept_seconds[i]);
+                      $(".dept_second").append($option);
+                    }
+                }
+              }
+              removeDiseaseDept();
+              document.getElementById("dept_first-name").innerHTML = department_name;
+              page = 0;
+              getDiseaseDept();
+          }, 10);
+      };
+
+       // 滚动条到底部自动加载
+       $(window).scroll(function(){
+          var scrollTop = $(this).scrollTop();
+          var scrollHeight = $(document).height();
+          var clientHeight = $(this).height();
+          if(scrollTop + clientHeight + 1 >= scrollHeight){
+            getDiseaseDept();
+          }
+          // 返回顶部显示隐藏
+          if (scrollTop > 400) { $(".goTop").fadeIn(100); }
+          else { $(".goTop").fadeOut(200); }
+       });
+
+       // 返回顶部点击事件
+       $(".goTop").click(function() {
+           $('html,body').animate({scrollTop: 0}, 500);
+       });
+    </script>
+</body>
+</html>
