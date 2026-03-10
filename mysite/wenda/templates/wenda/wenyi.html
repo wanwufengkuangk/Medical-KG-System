@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>快速问医 - 基层医疗辅助决策平台</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <!-- 引入资源 -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+
+    <style media="screen">
+        /* 保持与工作台一致的专业风格 */
+        body { background-color: #f0f2f5; font-family: "Microsoft YaHei", sans-serif; }
+
+        /* 左侧导航栏 */
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 220px;
+            background: #2c3e50; color: white; padding-top: 20px; z-index: 1000;
+        }
+        .sidebar-brand { text-align: center; padding: 20px 10px; border-bottom: 1px solid #3e4f5f; margin-bottom: 20px; }
+        .sidebar-nav a {
+            display: block; color: #abb1b7; padding: 15px 25px; text-decoration: none; transition: 0.3s;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: #1a252f; color: #3498db; border-left: 4px solid #3498db; }
+        .sidebar-nav i { margin-right: 10px; }
+
+        /* 右侧主体 */
+        .main-wrapper { margin-left: 220px; padding: 20px; }
+        .workstation-header {
+            background: white; padding: 15px 25px; margin-bottom: 20px;
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* 咨询卡片 */
+        .card { background: white; border-radius: 8px; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); max-width: 800px; margin: 0 auto; }
+        .card-title { border-left: 5px solid #3498db; padding-left: 15px; font-weight: bold; font-size: 20px; color: #333; margin-bottom: 30px; }
+
+        /* 表单美化 */
+        .form-group label { font-weight: bold; color: #555; margin-bottom: 10px; }
+        .form-control { border-radius: 4px; border: 1px solid #dcdfe6; padding: 12px; transition: border-color 0.2s; }
+        .form-control:focus { border-color: #3498db; box-shadow: none; }
+        textarea.form-control { height: 180px; resize: none; }
+
+        .btn-submit {
+            background: #3498db; color: white; border: none; padding: 12px 40px;
+            font-size: 16px; border-radius: 4px; transition: 0.3s; width: 100%; margin-top: 20px;
+        }
+        .btn-submit:hover { background: #2980b9; color: white; transform: translateY(-1px); }
+
+        .goTop {
+            height: 40px; width: 40px; background: #2c3e50; color: white;
+            position: fixed; bottom: 50px; right: 30px; display: none;
+            text-align: center; line-height: 40px; border-radius: 4px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 左侧导航栏 -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h4>医疗决策系统</h4>
+            <p style="font-size: 10px; color: #888;">Primary Medical Platform</p>
+        </div>
+        <div class="sidebar-nav">
+            <a href="{% url 'wenda:index' %}"><i class="glyphicon glyphicon-home"></i> <span>诊疗工作台</span></a>
+            <a href="{% url 'wenda:wenda' %}"><i class="glyphicon glyphicon-comment"></i> <span>智能问答</span></a>
+            <a href="{% url 'wenda:wenyi' %}" class="active"><i class="glyphicon glyphicon-edit"></i> <span>快速问医</span></a>
+            <a href="{% url 'wenda:department' '全部科室' %}"><i class="glyphicon glyphicon-th-list"></i> <span>科室索引</span></a>
+            <a href="{% url 'wenda:login' %}"><i class="glyphicon glyphicon-user"></i> <span>个人中心</span></a>
+        </div>
+    </div>
+
+    <!-- 右侧主体 -->
+    <div class="main-wrapper">
+        <header class="workstation-header">
+            <div>
+                <span class="text-muted">当前位置：</span> <strong>发起医学咨询</strong>
+            </div>
+            <div>
+                <span class="label label-info" style="padding: 5px 10px;">
+                    <i class="glyphicon glyphicon-lock"></i> 隐私保护已开启
+                </span>
+            </div>
+        </header>
+
+        <div class="card">
+            <div class="card-title">请描述您的问题详情</div>
+
+            <form action="{% url 'wenda:wenyi' %}" method="post">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label>问题标题</label>
+                    <input type="text" class="form-control" name="title" placeholder="请简要概括您的问题（如：近期持续头晕的原因）" required>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>问题详情描述</label>
+                    <textarea class="form-control" name="content" placeholder="请详细描述您的症状、持续时间、过往病史等，以便系统提供更精准的辅助分析..." required></textarea>
+                </div>
+
+                <!-- 隐藏字段保持逻辑一致 -->
+                <div style="display: none;">
+                    <input type="text" name="next_url" value="{{ next_url }}" />
+                </div>
+
+                <!-- 错误信息提示 -->
+                {% if login_error_msg %}
+                    <div class="alert alert-danger" style="margin-top: 15px; border-radius: 4px;">
+                        <i class="glyphicon glyphicon-exclamation-sign"></i> {{ login_error_msg }}
+                    </div>
+                {% endif %}
+
+                <button type="submit" class="btn-submit">
+                    <i class="glyphicon glyphicon-send"></i> 提交咨询并开启决策分析
+                </button>
+            </form>
+        </div>
+
+        <footer class="text-center text-muted" style="margin-top: 40px; padding-bottom: 20px;">
+            <p>© 2026 基层医疗辅助决策平台 | 数据加密传输：AES-256</p>
+        </footer>
+    </div>
+
+    <!-- 返回顶部 -->
+    <div class="goTop">
+        <span class="glyphicon glyphicon-chevron-up"></span>
+    </div>
+
+    <script type="text/javascript">
+        $(function() {
+            // 返回顶部逻辑
+            $(window).scroll(function() {
+                if ($(window).scrollTop() > 300) {
+                    $(".goTop").fadeIn(200);
+                } else {
+                    $(".goTop").fadeOut(200);
+                }
+            });
+            $(".goTop").click(function() {
+                $('html,body').animate({scrollTop: 0}, 500);
+            });
+        });
+    </script>
+</body>
+</html>

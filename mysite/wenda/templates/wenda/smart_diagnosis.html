@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 智能诊断与用药决策实验室</title>
+    {% load static %}
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <style>
+        body { background-color: #f4f7f9; font-family: "Microsoft YaHei", sans-serif; }
+        .header { background: #2c3e50; padding: 15px 30px; color: white; display: flex; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.2);}
+        .header a { color: #00e5ff; text-decoration: none; font-weight: bold;}
+        .main-container { max-width: 1200px; margin: 30px auto; padding: 0 15px; }
+
+        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-title { color: #2c3e50; border-left: 4px solid #00e5ff; padding-left: 10px; font-weight: bold; margin-bottom: 20px; font-size: 18px;}
+
+        /* 症状标签样式 */
+        .symptom-tag {
+            display: inline-block; padding: 6px 12px; margin: 4px;
+            border: 1px solid #dcdfe6; border-radius: 15px;
+            cursor: pointer; transition: 0.2s; color: #555; background: #fff; font-size: 13px;
+        }
+        .symptom-tag:hover { border-color: #3498db; color: #3498db; }
+        .symptom-tag.hidden { display: none; }
+
+        /* 已选症状区域 */
+        .selected-zone {
+            min-height: 50px; padding: 10px; background: #fdfdfd; border: 1px dashed #3498db;
+            border-radius: 8px; margin-bottom: 20px;
+        }
+        .selected-tag {
+            display: inline-block; padding: 5px 12px; margin: 4px;
+            background: #3498db; color: white; border-radius: 15px; font-size: 13px;
+        }
+        .selected-tag span { cursor: pointer; margin-left: 8px; font-weight: bold; }
+        .selected-tag span:hover { color: #ff4d4f; }
+
+        /* 搜索框 */
+        .sym-search { width: 100%; padding: 10px 15px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px; outline: none;}
+        .sym-search:focus { border-color: #00e5ff; }
+
+        .btn-predict { background: #2c3e50; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; width: 100%; margin-top: 15px; transition: 0.3s;}
+        .btn-predict:hover { background: #1a252f; color: #00e5ff; transform: translateY(-2px);}
+
+        /* 预测结果样式 */
+        .result-item {
+            padding: 15px; border-left: 5px solid #e74c3c; background: #fff;
+            margin-bottom: 15px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
+        .result-header h4 { margin: 0; color: #c0392b; font-weight: bold; font-size: 18px;}
+        .prob-bar { font-size: 22px; font-weight: bold; color: #e74c3c;}
+        .drug-recommend { background: #f8f9fa; padding: 8px 12px; border-radius: 4px; font-size: 13px; color: #2ecc71; border: 1px solid #eefaf3;}
+
+        .top-1 { border-left-color: #e74c3c; }
+        .top-2 { border-left-color: #f39c12; }
+        .top-2 h4, .top-2 .prob-bar { color: #d68910; }
+        .top-3 { border-left-color: #3498db; }
+        .top-3 h4, .top-3 .prob-bar { color: #2980b9; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <span style="font-size: 18px; font-weight: bold;"><i class="glyphicon glyphicon-tint"></i> 智能辅助诊疗与用药决策系统</span>
+        <a href="{% url 'wenda:index' %}">← 返回工作台</a>
+    </div>
+
+    <div class="main-container">
+        <!-- 任务书对标说明 -->
+        <div class="alert alert-info" style="border-radius: 8px; background-color: #eef5ff; border: none; color: #34495e;">
+            <strong>功能说明：</strong> 本系统结合 <b>Jaccard 图关联相似度算法</b>。勾选患者症状后，AI将实时计算并推荐最可能的疾病，并同步提供基于知识图谱的 <b>精准用药推荐</b>，以提升基层诊疗效率。
+        </div>
+
+        <div class="row">
+            <!-- 左侧：症状操作区 -->
+            <div class="col-md-7">
+                <!-- 已选区域 -->
+                <div class="card" style="margin-bottom: 15px; padding: 15px 25px;">
+                    <div style="font-weight: bold; color: #3498db; margin-bottom: 10px;">当前已选症状：</div>
+                    <div class="selected-zone" id="selected-zone">
+                        <span style="color: #ccc; line-height: 30px;" id="empty-tip">尚未选择任何症状</span>
+                    </div>
+                    <button class="btn-predict" onclick="doPredict()">
+                        <i class="glyphicon glyphicon-tasks"></i> 启动多维关联图计算预测
+                    </button>
+                </div>
+
+                <!-- 症状池 -->
+                <div class="card">
+                    <div class="card-title">患者症状检索池</div>
+                    <input type="text" class="sym-search" id="symFilter" placeholder="搜索症状名称（如：发热）...">
+                    <div id="symptoms-container" style="height: 350px; overflow-y: auto; padding: 5px;">
+                        {% for sym in all_symptoms %}
+                            <span class="symptom-tag" onclick="selectSymptom('{{ sym }}', this)">{{ sym }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：预测报告区 -->
+            <div class="col-md-5">
+                <div class="card" style="min-height: 600px;">
+                    <div class="card-title">AI 辅助诊疗与用药报告</div>
+
+                    <div id="loading" style="display: none; text-align: center; color: #999; margin-top: 100px;">
+                        <i class="glyphicon glyphicon-refresh" style="font-size: 30px; animation: spin 2s linear infinite;"></i><br><br>
+                        正在进行图关联度计算...<br>正在匹配最佳用药方案...
+                    </div>
+
+                    <div id="results-container" style="margin-top: 20px;">
+                        <p style="color: #999; text-align: center; margin-top: 100px;">请在左侧勾选症状并点击预测按钮</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% csrf_token %}
+
+    <script>
+        // 维护一个已选数组
+        var selectedSymptoms = [];
+
+        // 1. 过滤功能
+        $('#symFilter').on('input', function() {
+            var val = $(this).val().toLowerCase();
+            $('.symptom-tag').each(function() {
+                var text = $(this).text().toLowerCase();
+                if(text.indexOf(val) > -1 && !selectedSymptoms.includes($(this).text())) {
+                    $(this).removeClass('hidden');
+                } else {
+                    $(this).addClass('hidden');
+                }
+            });
+        });
+
+        // 2. 选择症状并移入“已选区”
+        function selectSymptom(symName, elem) {
+            if(!selectedSymptoms.includes(symName)) {
+                selectedSymptoms.push(symName);
+                renderSelected();
+                $(elem).addClass('hidden'); // 在下方池子里隐藏
+            }
+        }
+
+        // 3. 取消选择
+        function removeSymptom(symName) {
+            selectedSymptoms = selectedSymptoms.filter(item => item !== symName);
+            renderSelected();
+            // 在下方池子里重新显示
+            $('.symptom-tag').each(function() {
+                if($(this).text() === symName) {
+                    $(this).removeClass('hidden');
+                }
+            });
+            // 重新触发过滤
+            $('#symFilter').trigger('input');
+        }
+
+        // 渲染已选区域
+        function renderSelected() {
+            var zone = $('#selected-zone');
+            if(selectedSymptoms.length === 0) {
+                zone.html('<span style="color: #ccc; line-height: 30px;" id="empty-tip">尚未选择任何症状</span>');
+            } else {
+                zone.empty();
+                selectedSymptoms.forEach(function(sym) {
+                    var tag = `<div class="selected-tag">${sym} <span onclick="removeSymptom('${sym}')">×</span></div>`;
+                    zone.append(tag);
+                });
+            }
+        }
+
+        // 4. 执行预测
+        function doPredict() {
+            if(selectedSymptoms.length === 0) {
+                alert("请先从下方列表选择患者症状！");
+                return;
+            }
+
+            $('#results-container').hide();
+            $('#loading').show();
+            var csrfToken = jQuery("[name=csrfmiddlewaretoken]").val();
+
+            $.ajax({
+                url: '{% url "wenda:smart_diagnosis" %}',
+                type: 'POST',
+                data: JSON.stringify({'symptoms': selectedSymptoms}),
+                contentType: 'application/json',
+                headers: { 'X-CSRFToken': csrfToken },
+                success: function(res) {
+                    $('#loading').hide();
+                    $('#results-container').empty().show();
+
+                    if(res.status === 'success') {
+                        if(res.data.length === 0) {
+                            $('#results-container').html('<p style="text-align:center; color:#e74c3c; margin-top: 50px;">未能匹配到高度相关的疾病，请更换症状。</p>');
+                            return;
+                        }
+
+                        var classes = ['top-1', 'top-2', 'top-3'];
+                        $.each(res.data, function(i, item) {
+                            var rankClass = classes[i] || 'top-3';
+                            var html = `
+                                <div class="result-item ${rankClass}">
+                                    <div class="result-header">
+                                        <h4>TOP ${i+1}: ${item.disease}</h4>
+                                        <div class="prob-bar">${item.probability}%</div>
+                                    </div>
+                                    <div class="drug-recommend">
+                                        <i class="glyphicon glyphicon-leaf"></i> <b>用药推荐：</b>${item.drugs}
+                                    </div>
+                                </div>
+                            `;
+                            $('#results-container').append(html);
+                        });
+
+                        $('#results-container').append(`
+                            <div style="text-align: center; margin-top: 25px;">
+                                <a href="/disease/${res.data[0].disease}" class="btn btn-default btn-sm" style="color: #3498db;">
+                                    查看【${res.data[0].disease}】图谱详情 &rarr;
+                                </a>
+                            </div>
+                        `);
+                    } else {
+                        alert("计算失败：" + res.msg);
+                    }
+                },
+                error: function(err) {
+                    $('#loading').hide();
+                    $('#results-container').show().html('<p style="color:red; text-align:center;">服务器请求失败。</p>');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

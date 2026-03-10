@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>认证信息修改 - 医疗辅助决策平台</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <!-- 引入 Bootstrap -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+    <style media="screen">
+        /* 1. 基础样式与背景 */
+        body { background-color: #f4f7f9; font-family: "Microsoft YaHei", sans-serif; }
+
+        /* 2. 头部导航美化 */
+        header { background: white !important; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .nav-brand-custom { font-size: 20px; font-weight: 700; color: #2c3e50; text-decoration: none !important; }
+
+        /* 3. 认证卡片美化 */
+        .auth-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(50, 50, 93, 0.05);
+            margin: 20px auto;
+        }
+        .auth-card h2 {
+            color: #2c3e50;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+            display: inline-block;
+            width: 100%;
+        }
+
+        /* 4. 表单项美化 */
+        .form-group { margin-bottom: 20px; }
+        .form-group label { color: #7f8c8d; font-size: 14px; font-weight: 500; margin-bottom: 8px; display: block; }
+        .form-control {
+            height: 45px;
+            border-radius: 6px;
+            border: 1px solid #dce4ec;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+
+        /* 5. 按钮美化 */
+        .btn-submit {
+            background: #3498db;
+            color: white;
+            border: none;
+            height: 48px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: 0.3s;
+            margin-top: 20px;
+        }
+        .btn-submit:hover { background: #2980b9; transform: translateY(-1px); color: white; }
+
+        /* 6. 错误提示 */
+        #error-msg {
+            background: #fef0f0;
+            color: #f56c6c;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f56c6c;
+            font-size: 14px;
+        }
+
+        /* 7. 返回顶部 */
+        .goTop {
+            height: 45px; width: 45px; background: #2c3e50; border-radius: 50%;
+            position: fixed; top: 85%; right: 3%; display: none;
+            padding: 12px; text-align: center; color: white; cursor: pointer;
+        }
+
+        footer { background: #2c3e50 !important; color: #95a5a6 !important; margin-top: 50px; padding: 20px !important; }
+    </style>
+</head>
+<body>
+    <div class="container col-xs-12 col-sm-8 col-sm-offset-2">
+        <!--头部导航-->
+        <header class="row">
+            <nav style="text-align:center; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="width: 40px;"></div>
+                <a href="{% url 'wenda:index' %}" class="nav-brand-custom">医疗决策系统</a>
+                <a href="{% url 'wenda:login'%}">
+                    <img src="{% static 'wenda/images/user.png' %}" style="width:28px; height:28px; opacity: 0.7;">
+                </a>
+            </nav>
+        </header>
+
+        <!-- 认证信息表单卡片 -->
+        <div class="auth-card">
+            <form action="{% url 'wenda:alter_info' %}" method="post">
+                {% csrf_token %}
+                <h2>填写个人认证信息</h2>
+
+                <!-- 错误提示（逻辑保留） -->
+                {% if login_error_msg %}
+                    <div id="error-msg">
+                        <i class="glyphicon glyphicon-info-sign"></i> {{ login_error_msg }}
+                    </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label><i class="glyphicon glyphicon-envelope"></i> 电子邮箱</label>
+                    <input type="email" class="form-control" name="email" placeholder="example@mail.com" required value="{{data.mail}}"/>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="glyphicon glyphicon-calendar"></i> 出生日期</label>
+                    <input type="date" class="form-control" name="birth" required value="{{data.birth}}"/>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="glyphicon glyphicon-phone"></i> 手机号</label>
+                    <input type="tel" class="form-control" name="tel" placeholder="请输入11位手机号" required value="{{data.tel}}"/>
+                </div>
+
+                <div>
+                    <button type="submit" class="btn btn-submit shadow-sm">提交保存认证</button>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="javascript:history.back()" style="color: #95a5a6; font-size: 13px; text-decoration: none;">取消修改</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="goTop">
+            <span class="glyphicon glyphicon-chevron-up"></span>
+        </div>
+
+        <!--footer-->
+        <footer class="row text-center">
+            <p style="margin: 0; font-size: 12px;">© 2026 基层医疗辅助平台 | 隐私数据加密保护</p>
+        </footer>
+    </div>
+
+    <!-- 保持原有的脚本逻辑 -->
+    <script type="text/javascript">
+        function goTop(min_height) {
+            $(".goTop").click(function() {
+                $('html,body').animate({ scrollTop: 0 }, 700);
+            });
+            min_height = min_height ? min_height : 400;
+            $(window).scroll(function() {
+                var s = $(window).scrollTop();
+                if (s > min_height) { $(".goTop").fadeIn(100); }
+                else { $(".goTop").fadeOut(200); }
+            });
+        }
+        $(function() { goTop(); });
+    </script>
+</body>
+</html>

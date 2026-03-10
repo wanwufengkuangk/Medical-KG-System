@@ -1,0 +1,14 @@
+
+# 忽略大型模型和数据库
+*.pkl
+graph.db/
+db.sqlite3
+spider/*.json
+spider/*.csv
+
+# 忽略缓存
+__pycache__/
+*.pyc
+.idea/
+.vscode/
+venv/

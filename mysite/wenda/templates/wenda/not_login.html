@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>访问受限 - 基层医疗辅助决策平台</title>
+    {% load static %}
+    <!-- 引入资源 -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: "Microsoft YaHei", sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+        .error-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            border-top: 5px solid #3498db;
+        }
+        .icon-box {
+            font-size: 60px;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #2c3e50;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        p {
+            color: #7f8c8d;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .btn-login {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 40px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: inline-block;
+            border: none;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        .btn-login:hover {
+            background-color: #2980b9;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+            text-decoration: none;
+        }
+        .footer-info {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="error-card">
+        <div class="icon-box">
+            <!-- 使用 Bootstrap 内置图标 -->
+            <span class="glyphicon glyphicon-lock"></span>
+        </div>
+        <h2>访问权限受限</h2>
+        <p>
+            为了保障基层医疗数据的安全性与隐私性，<br>
+            该功能仅对实名认证用户开放。
+        </p>
+
+        <a href="{% url 'wenda:login' %}" class="btn-login">
+            <span class="glyphicon glyphicon-user"></span> 立即登录验证
+        </a>
+
+        <div class="footer-info">
+            <p>© 2026 基层医疗辅助决策平台 <br> 数据安全保护已开启</p>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登陆注册 - 医疗辅助决策平台</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <!-- 保持原有的资源引入 -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+
+    <style media="screen">
+        /* 1. 全局样式优化 */
+        body { background-color: #f0f4f8; font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif; }
+
+        /* 2. 头部导航美化 */
+        header { background: white !important; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .nav-link-custom { text-decoration: none !important; color: #2c3e50 !important; font-weight: 600; }
+
+        /* 3. 登录卡片美化 */
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+            margin: 40px auto;
+        }
+
+        .login-box h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* 4. 单选框（角色选择）美化 */
+        .role-section {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .radio-inline { font-weight: 500; color: #5d6d7e; margin: 0 15px !important; }
+
+        /* 5. 输入框美化 */
+        .form-control {
+            height: 48px;
+            border-radius: 6px;
+            border: 1px solid #dcdfe6;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        .form-control:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.2);
+        }
+
+        /* 6. 按钮与链接美化 */
+        .btn-login {
+            background: #3498db;
+            color: white;
+            border: none;
+            height: 48px;
+            width: 120px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+        .btn-login:hover { background: #2980b9; color: white; transform: translateY(-1px); }
+        .signup-link { color: #3498db; text-decoration: none; margin-left: 20px; font-size: 14px; }
+        .signup-link:hover { text-decoration: underline; }
+
+        /* 7. 错误消息 */
+        #error-msg {
+            background: #fef0f0;
+            color: #f56c6c;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f56c6c;
+        }
+
+        /* 8. 返回顶部 */
+        .goTop {
+            height: 45px; width: 45px; background: #2c3e50;
+            position: fixed; top: 85%; right: 3%;
+            display: none; padding: 12px; text-align: center;
+            border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+        }
+
+        footer { background: #2c3e50 !important; color: #95a5a6 !important; margin-top: 50px; }
+    </style>
+</head>
+
+<body>
+    <div class="container col-xs-12 col-sm-8 col-sm-offset-2">
+        <!--头部开始-->
+        <header class="row">
+            <nav style="text-align:center; padding: 15px;">
+                <div class="col-xs-4 col-xs-offset-4" style="font-size: 20px;">
+                    <a href="{% url 'wenda:index' %}" class="nav-link-custom">医疗决策系统</a>
+                </div>
+                <div class="col-xs-1 col-xs-offset-3">
+                    <a href="{% url 'wenda:login'%}">
+                        <img src="{% static 'wenda/images/user.png' %}" style="width:30px; height:30px; opacity: 0.8;">
+                    </a>
+                </div>
+            </nav>
+        </header>
+        <!--头部结束-->
+
+        <!--登录表单卡片开始-->
+        <div class="login-box">
+            <form action="{% url 'wenda:login' %}" method="post">
+                {% csrf_token %}
+                <h2>请使用用户名登录</h2>
+
+                <!-- 角色选择区 -->
+                <div class="role-section">
+                    <label class="radio-inline">
+                        <input type="radio" name="user_role" value="normal" checked> 普通用户
+                    </label>
+                    <label class="radio-inline">
+                        <input type="radio" name="user_role" value="doctor"> 资格医师
+                    </label>
+                </div>
+
+                <!-- 输入区 -->
+                <div>
+                    <input id="user" type="text" class="form-control" name="username" placeholder="请输入用户名" required />
+                </div>
+                <div>
+                    <input id="pwd" type="password" class="form-control" name="password" placeholder="请输入密码" required />
+                </div>
+
+                <!-- 隐藏的 Next URL -->
+                <div style="display: none;">
+                    <input id="next" type="text" name="next_url" value="{{ next_url }}" />
+                </div>
+
+                <!-- 错误提示 -->
+                {% if login_error_msg %}
+                    <div id="error-msg">
+                        <i class="glyphicon glyphicon-info-sign"></i> {{ login_error_msg }}
+                    </div>
+                {% endif %}
+
+                <!-- 操作区 -->
+                <div style="margin-top: 30px; text-align: center;">
+                    <button type="submit" class="btn btn-login">立即登录</button>
+                    <a href="{% url 'wenda:signup'%}" class="signup-link">没有账号？注册一个</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="goTop">
+            <span class="glyphicon glyphicon-chevron-up"></span>
+        </div>
+
+        <!--footer开始-->
+        <footer class="row text-center">
+            <p style="margin: 0;">© 2026 基层医疗系统 | 数据加密传输中</p>
+        </footer>
+    </div>
+</body>
+
+<!-- 保持原有的返回顶部脚本 -->
+<script type="text/javascript">
+    function goTop(min_height) {
+        $(".goTop").click(
+            function() {
+                $('html,body').animate({
+                    scrollTop: 0
+                }, 700);
+            });
+        min_height = min_height ? min_height : 400;
+        $(window).scroll(function() {
+            var s = $(window).scrollTop();
+            if (s > min_height) {
+                $(".goTop").fadeIn(100);
+            } else {
+                $(".goTop").fadeOut(200);
+            }
+        });
+    }
+    $(function() {
+        goTop();
+    });
+</script>
+</html>

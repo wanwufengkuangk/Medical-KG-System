@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>症状详情 - 基层医疗辅助决策平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <!-- 引入资源 -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+
+    <style media="screen">
+        /* 1. 全局布局样式 (深蓝工作站风格) */
+        body { background-color: #f0f2f5; font-family: "Microsoft YaHei", sans-serif; overflow-x: hidden; margin: 0; }
+
+        .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 220px; background: #2c3e50; color: white; padding-top: 20px; z-index: 1000; }
+        .sidebar-brand { text-align: center; padding: 20px 10px; border-bottom: 1px solid #3e4f5f; margin-bottom: 20px; }
+        .sidebar-nav a { display: block; color: #abb1b7; padding: 15px 25px; text-decoration: none; transition: 0.3s; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: #1a252f; color: #3498db; border-left: 4px solid #3498db; text-decoration: none; }
+        .sidebar-nav i { margin-right: 10px; }
+
+        .main-wrapper { margin-left: 220px; padding: 20px; }
+        .workstation-header { background: white; padding: 15px 25px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+
+        /* 2. 核心：症状卡片美化 */
+        .symptom-card {
+            background: white; border-radius: 12px; padding: 30px; margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 4px solid #e67e22; /* 症状使用警示的橙色 */
+        }
+
+        .symptom-small-box { border-bottom: 1px solid #f0f2f5; padding: 20px 0; }
+        .symptom-small-box:last-child { border-bottom: none; padding-bottom: 0; }
+
+        /* 标题样式 */
+        .symptom-title { color: #e67e22; font-size: 16px; font-weight: bold; margin-bottom: 15px; border-left: 4px solid #e67e22; padding-left: 10px; display: flex; justify-content: space-between;}
+        #symptom { font-size: 28px; color: #2c3e50; font-weight: bold; margin-bottom: 10px; display: block; border: none; padding: 0;}
+
+        /* 内容折叠区逻辑兼容 */
+        .symptom-txt { color: #444; font-size: 15px; line-height: 1.8; height: 80px; overflow: hidden; transition: all 0.3s ease; }
+        .symptom-txt-auto { color: #444; font-size: 15px; line-height: 1.8; height: auto; overflow: visible; transition: all 0.3s ease; }
+
+        .symptom-more { text-align: center; margin-top: 15px; cursor: pointer; color: #95a5a6; background: #fdfdfd; padding: 8px; border-radius: 4px; transition: 0.2s; }
+        .symptom-more:hover { background: #f0f2f5; color: #e67e22; }
+
+        /* 3. 关联疾病块美化 (修复了你报错的伪类和闭合问题) */
+        .symptom-r-disease-a {
+            display: block; background: #fcfcfc; border: 1px solid #edf2f6;
+            border-radius: 8px; padding: 15px; margin-bottom: 15px;
+            text-decoration: none !important; transition: 0.3s; cursor: pointer; outline: none;
+        }
+        .symptom-r-disease-a:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-color: #3498db; }
+        .symptom-r-disease-name { color: #2c3e50; font-size: 16px; font-weight: bold; margin-bottom: 8px; }
+        .symptom-r-disease-symptom { color: #7f8c8d; font-size: 13px; line-height: 1.5; }
+
+        /* 关联症状标签 (Tag) */
+        .symptom-r-symptom {
+            display: inline-block; background: #fff5eb; color: #e67e22;
+            border: 1px solid #ffe3cd; padding: 6px 15px; border-radius: 20px;
+            margin: 0 10px 10px 0; text-decoration: none !important; transition: 0.2s; cursor: pointer; outline: none;
+        }
+        .symptom-r-symptom:hover { background: #e67e22; color: white !important; }
+
+        .goTop {
+            height: 40px; width: 40px; background: #2c3e50; color: white;
+            position: fixed; bottom: 40px; right: 30px; display: none;
+            text-align: center; line-height: 40px; border-radius: 50%; cursor: pointer; z-index: 1001;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 左侧导航栏 -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h4>医疗决策系统</h4>
+            <p style="font-size: 10px; color: #888;">Primary Medical Platform</p>
+        </div>
+        <div class="sidebar-nav">
+            <a href="{% url 'wenda:index' %}"><i class="glyphicon glyphicon-home"></i> <span>诊疗工作台</span></a>
+            <a href="{% url 'wenda:wenda' %}"><i class="glyphicon glyphicon-comment"></i> <span>智能问答</span></a>
+            <a href="{% url 'wenda:wenyi' %}"><i class="glyphicon glyphicon-edit"></i> <span>快速问医</span></a>
+            <a href="{% url 'wenda:department' '全部科室' %}"><i class="glyphicon glyphicon-th-list"></i> <span>科室索引</span></a>
+            <a href="{% url 'wenda:login' %}"><i class="glyphicon glyphicon-user"></i> <span>个人中心</span></a>
+        </div>
+    </div>
+
+    <!-- 右侧内容区 -->
+    <div class="main-wrapper">
+        <header class="workstation-header">
+            <div><span class="text-muted">当前位置：</span> <strong>医学症状详情与推理</strong></div>
+            <div id="feedback">
+                <!-- 由 JS 根据权限动态填入反馈入口 -->
+            </div>
+        </header>
+
+        <!-- 症状核心档案卡片 -->
+        <div class="symptom-card">
+            <!-- 症状标题与概述 -->
+            <div class="symptom-small-box" style="padding-top:0;">
+                <span id="symptom">正在加载...</span>
+                <div class="symptom-title" style="border:none; padding:0; margin-top: 15px;">症状概述</div>
+                <div class="symptom-txt" id="brief"></div>
+                <div class="symptom-more"><span class="glyphicon glyphicon-chevron-down"></span> 展开阅读</div>
+            </div>
+
+            <!-- 病因 -->
+            <div class="symptom-small-box">
+                <div class="symptom-title">病因</div>
+                <div class="symptom-txt" id="cause"></div>
+                <div class="symptom-more"><span class="glyphicon glyphicon-chevron-down"></span> 展开阅读</div>
+            </div>
+
+            <!-- 检查 -->
+            <div class="symptom-small-box">
+                <div class="symptom-title">检查方法</div>
+                <div class="symptom-txt" id="check"></div>
+                <div class="symptom-more"><span class="glyphicon glyphicon-chevron-down"></span> 展开阅读</div>
+            </div>
+
+            <!-- 诊断 -->
+            <div class="symptom-small-box">
+                <div class="symptom-title">临床诊断</div>
+                <div class="symptom-txt" id="diagnose"></div>
+                <div class="symptom-more"><span class="glyphicon glyphicon-chevron-down"></span> 展开阅读</div>
+            </div>
+
+            <!-- 预防 -->
+            <div class="symptom-small-box">
+                <div class="symptom-title">预防建议</div>
+                <div class="symptom-txt" id="prevent"></div>
+                <div class="symptom-more"><span class="glyphicon glyphicon-chevron-down"></span> 展开阅读</div>
+            </div>
+        </div>
+
+        <!-- 辅助推理卡片：关联疾病与症状 -->
+        <div class="symptom-card" style="border-top-color: #3498db;">
+            <!-- 可能患有的疾病 -->
+            <div class="symptom-small-box" style="border:none; padding-top:0;">
+                <div class="symptom-title" style="border-left-color: #3498db; color: #3498db;">根据该症状推理可能患有的疾病</div>
+                <div class="row" id="r_disease" style="margin-top: 15px;">
+                    {% for disease in symptom_info.r_disease %}
+                        <!-- 修复了此处 class 重复和结构混乱的问题 -->
+                        <a class="col-md-6 symptom-r-disease-a" href="{% url 'wenda:disease' disease.name %}">
+                            <div class="symptom-r-disease-name">{{disease.name}}</div>
+                            <div class="symptom-r-disease-symptom">常见症状：{{disease.r_symptom}}</div>
+                        </a>
+                    {% empty %}
+                        <span class="text-muted">知识图谱暂未收录关联疾病信息</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 常见伴随症状 -->
+            <div class="symptom-small-box" style="border:none;">
+                <div class="symptom-title" style="border-left-color: #3498db; color: #3498db;">常见伴随症状</div>
+                <div id="r_symptom" style="margin-top: 15px;">
+                    {% for symptom in symptom_info.r_symptom %}
+                        <a class="symptom-r-symptom" href="{% url 'wenda:symptom' symptom %}">{{symptom}}</a>
+                    {% empty %}
+                        <span class="text-muted">暂无相关伴随症状信息</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center text-muted" style="margin-top: 50px; padding-bottom: 20px;">
+            <p>© 2026 基层医疗辅助决策平台 | 基于 Neo4j 图谱推理</p>
+        </footer>
+    </div>
+
+    <!-- 返回顶部 -->
+    <div class="goTop">
+        <span class="glyphicon glyphicon-chevron-up"></span>
+    </div>
+
+    <!-- ==============================================
+         核心逻辑保留：绝不改动任何数据获取和渲染逻辑
+         ============================================== -->
+    <script type="text/javascript" src="{% static 'wenda/js/symptom.js' %}"></script>
+    <script type="text/javascript">
+        // 初始化数据
+        var symptom_info = {{ symptom_info|safe }};
+        symptomInfo(symptom_info);
+
+        // 医生反馈逻辑
+        function getCookie(cname){
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0; i<ca.length; i++) {
+                var c = ca[i].trim();
+                if (c.indexOf(name)==0) { return c.substring(name.length,c.length); }
+            }
+            return "";
+        }
+        var user_role = getCookie("user_role");
+        if(user_role == 'doctor'){
+            $("#feedback").html('<a href="{% url 'wenda:feedback' 'symptom'%}" class="btn btn-warning btn-xs"><i class="glyphicon glyphicon-edit"></i> 修正症状信息</a>');
+        }
+    </script>
+
+    <!-- 展开与收起交互逻辑 -->
+    <script type="text/javascript">
+        $('.symptom-more').click(function(){
+            // 切换内容高度的类
+            $(this).prev().toggleClass("symptom-txt symptom-txt-auto");
+            // 切换箭头的方向
+            var icon = $(this).children('span');
+            if(icon.hasClass("glyphicon-chevron-down")) {
+                icon.removeClass("glyphicon-chevron-down").addClass("glyphicon-chevron-up");
+                $(this).html('<span class="glyphicon glyphicon-chevron-up"></span> 收起阅读');
+            } else {
+                icon.removeClass("glyphicon-chevron-up").addClass("glyphicon-chevron-down");
+                $(this).html('<span class="glyphicon glyphicon-chevron-down"></span> 展开阅读');
+            }
+        });
+
+        // 返回顶部逻辑
+        $(function() {
+            $(window).scroll(function() {
+                if ($(window).scrollTop() > 400) { $(".goTop").fadeIn(100); }
+                else { $(".goTop").fadeOut(200); }
+            });
+            $(".goTop").click(function() { $('html,body').animate({scrollTop: 0}, 500); });
+        });
+    </script>
+</body>
+</html>
