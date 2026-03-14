@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>用户注册 - 医疗辅助决策平台</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <!-- 引入 Bootstrap -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+
+    <style media="screen">
+        /* 全局美化 */
+        body { background-color: #f0f4f8; font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif; }
+
+        /* 头部美化 */
+        header { background: white !important; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .nav-link-custom { text-decoration: none !important; color: #2c3e50 !important; font-weight: 600; }
+
+        /* 注册卡片美化 */
+        .signup-box {
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+            margin: 30px auto;
+        }
+
+        .signup-box h2 {
+            color: #2c3e50;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        /* 角色选择区 */
+        .role-section {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .radio-inline { font-weight: 500; color: #5d6d7e; margin: 0 15px !important; }
+
+        /* 标签与提示文字 */
+        .field-label {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+            margin-top: 15px;
+            display: block;
+        }
+
+        /* 输入框美化 */
+        .form-control {
+            height: 45px;
+            border-radius: 6px;
+            border: 1px solid #dcdfe6;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            border-color: #2ecc71;
+            box-shadow: 0 0 8px rgba(46, 204, 113, 0.2);
+        }
+
+        /* 错误消息 */
+        #error-msg {
+            background: #fef0f0;
+            color: #f56c6c;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            border-left: 4px solid #f56c6c;
+            font-size: 13px;
+        }
+
+        /* 按钮美化 */
+        .btn-signup {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            height: 48px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: 0.3s;
+            margin-top: 25px;
+        }
+        .btn-signup:hover { background: #27ae60; color: white; transform: translateY(-1px); }
+
+        /* 返回顶部 */
+        .goTop {
+            height: 45px; width: 45px; background: #2c3e50;
+            position: fixed; top: 85%; right: 3%;
+            display: none; padding: 12px; text-align: center;
+            border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+        }
+        .goTop span { color: #fff; }
+
+        footer { background: #2c3e50 !important; color: #95a5a6 !important; margin-top: 40px; padding: 15px !important; }
+    </style>
+</head>
+
+<body>
+    <div class="container col-xs-12 col-sm-8 col-sm-offset-2">
+        <!--头部开始-->
+        <header class="row">
+            <nav style="text-align:center; padding: 12px;">
+                <div class="col-xs-4 col-xs-offset-4" style="font-size: 18px;">
+                    <a href="{% url 'wenda:index' %}" class="nav-link-custom">医疗问答系统</a>
+                </div>
+                <div class="col-xs-1 col-xs-offset-3">
+                    <a href="{% url 'wenda:login'%}">
+                        <img src="{% static 'wenda/images/user.png' %}" style="width:28px; height:28px; opacity: 0.8;">
+                    </a>
+                </div>
+            </nav>
+        </header>
+        <!--头部结束-->
+
+        <!-- 注册卡片 -->
+        <div class="signup-box">
+            <form action="{% url 'wenda:signup' %}" method="post">
+                {% csrf_token %}
+                <h2>请使用邮箱注册</h2>
+
+                <!-- 角色选择 -->
+                <div class="role-section">
+                    <label class="radio-inline">
+                        <input type="radio" name="user_role" value="normal" checked> 普通用户
+                    </label>
+                    <label class="radio-inline">
+                        <input type="radio" name="user_role" value="doctor"> 资格医师
+                    </label>
+                </div>
+
+                <!-- 用户名 -->
+                <div>
+                    <span class="field-label">用户名：（注册后不可修改）</span>
+                    <input id="user" type="text" class="form-control" name="username" placeholder="请设置用户名" required />
+                </div>
+
+                <!-- 邮箱 -->
+                <div>
+                    <span class="field-label">电子邮箱：</span>
+                    <input id="email" type="email" class="form-control" name="email" placeholder="example@mail.com" required />
+                </div>
+
+                <!-- 密码 -->
+                <div>
+                    <span class="field-label">登录密码：</span>
+                    <input id="pwd" type="password" class="form-control" name="password" placeholder="请输入密码" required />
+                </div>
+
+                <!-- 隐藏的 Next URL -->
+                <div style="display: none;">
+                    <input id="next" type="text" name="next_url" value="{{ next_url }}" />
+                </div>
+
+                <!-- 错误提示 -->
+                {% if login_error_msg %}
+                    <div id="error-msg">
+                        <span class="glyphicon glyphicon-exclamation-sign"></span> {{ login_error_msg }}
+                    </div>
+                {% endif %}
+
+                <!-- 提交按钮 -->
+                <div>
+                    <button type="submit" class="btn btn-signup shadow-sm">注册并登陆</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="goTop">
+            <span class="glyphicon glyphicon-chevron-up"></span>
+        </div>
+
+        <!--footer开始-->
+        <footer class="row text-center">
+            <p style="margin: 0; font-size: 12px;">© 2026 基层医疗辅助平台 | 欢迎注册</p>
+        </footer>
+    </div>
+
+    <!-- 脚本部分保持原逻辑不动 -->
+    <script type="text/javascript">
+        function goTop(min_height) {
+            $(".goTop").click(function() {
+                $('html,body').animate({ scrollTop: 0 }, 700);
+            });
+            min_height = min_height ? min_height : 400;
+            $(window).scroll(function() {
+                var s = $(window).scrollTop();
+                if (s > min_height) {
+                    $(".goTop").fadeIn(100);
+                } else {
+                    $(".goTop").fadeOut(200);
+                }
+            });
+        }
+        $(function() {
+            goTop();
+        });
+    </script>
+</body>
+</html>

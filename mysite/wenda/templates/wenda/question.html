@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>问诊详情 - 基层医疗辅助决策平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+
+    <style media="screen">
+        body { background-color: #f0f2f5; font-family: "Microsoft YaHei", sans-serif; overflow-x: hidden; margin: 0; }
+        .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 220px; background: #2c3e50; color: white; padding-top: 20px; z-index: 1000; }
+        .sidebar-brand { text-align: center; padding: 20px 10px; border-bottom: 1px solid #3e4f5f; margin-bottom: 20px; }
+        .sidebar-nav a { display: block; color: #abb1b7; padding: 15px 25px; text-decoration: none; transition: 0.3s; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: #1a252f; color: #3498db; border-left: 4px solid #3498db; text-decoration: none; }
+        .main-wrapper { margin-left: 220px; padding: 20px; }
+        .workstation-header { background: white; padding: 15px 25px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+
+        .question-card { background: white; border-radius: 12px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #e74c3c; }
+        .q-title { font-size: 24px; font-weight: bold; color: #2c3e50; margin-bottom: 15px; }
+        .q-content { font-size: 16px; color: #5d6d7e; line-height: 1.8; margin-bottom: 20px; }
+        .q-meta { font-size: 13px; color: #95a5a6; text-align: right; border-top: 1px solid #f9f9f9; padding-top: 10px; }
+
+        .section-title { font-weight: bold; font-size: 18px; margin-bottom: 20px; color: #2c3e50; border-left: 4px solid #3498db; padding-left: 12px; }
+
+        .reply-editor { background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #dcdfe6; }
+        textarea#content { width: 100%; height: 120px; border: 1px solid #ebeef5; border-radius: 8px; padding: 15px; resize: none; outline: none; transition: 0.3s; }
+        textarea#content:focus { border-color: #3498db; }
+        .btn-reply { background: #3498db; color: white; border: none; padding: 8px 30px; border-radius: 4px; font-weight: bold; transition: 0.3s; margin-top: 10px; }
+        .btn-reply:hover { background: #2980b9; transform: translateY(-1px); }
+
+        .reply-item { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #edf2f6; }
+        .reply-content { font-size: 16px; color: #333; line-height: 1.6; margin-bottom: 15px; }
+        .doctor-info { display: flex; justify-content: space-between; align-items: center; font-size: 13px; background: #f8fbff; padding: 10px 15px; border-radius: 6px; }
+        .doc-name { font-weight: bold; color: #3498db; margin-right: 15px; }
+        .doc-hospital { color: #7f8c8d; }
+        .goTop { height: 40px; width: 40px; background: #2c3e50; color: white; position: fixed; bottom: 50px; right: 30px; display: none; text-align: center; line-height: 40px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand"><h4>医疗决策系统</h4><p style="font-size: 10px; color: #888;">Primary Medical Platform</p></div>
+        <div class="sidebar-nav">
+            <a href="{% url 'wenda:index' %}"><i class="glyphicon glyphicon-home"></i> <span>诊疗工作台</span></a>
+            <a href="{% url 'wenda:wenda' %}"><i class="glyphicon glyphicon-comment"></i> <span>智能问答</span></a>
+            <a href="{% url 'wenda:wenyi' %}"><i class="glyphicon glyphicon-edit"></i> <span>快速问医</span></a>
+            <a href="{% url 'wenda:department' '全部科室' %}"><i class="glyphicon glyphicon-th-list"></i> <span>科室索引</span></a>
+            <a href="{% url 'wenda:login' %}"><i class="glyphicon glyphicon-user"></i> <span>个人中心</span></a>
+        </div>
+    </div>
+
+    <div class="main-wrapper">
+        <header class="workstation-header">
+            <div><span class="text-muted">当前位置：</span> <strong>咨询问诊详情</strong></div>
+            <form action="{% url 'wenda:search' %}" method="POST" class="form-inline hidden-xs">
+                {% csrf_token %}
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="搜索..." name="search_text">
+                    <span class="input-group-btn"><button class="btn btn-primary" type="submit"><i class="glyphicon glyphicon-search"></i></button></span>
+                </div>
+            </form>
+        </header>
+
+        <div class="question-card shadow-sm">
+            <div class="q-title"><i class="glyphicon glyphicon-question-sign" style="color:#e74c3c"></i> {{question.title}}</div>
+            <div class="q-content">{{question.content}}</div>
+            <div class="q-meta"><i class="glyphicon glyphicon-time"></i> 发布时间：{{question.date}} {{question.time}}</div>
+        </div>
+
+        <!-- 核心修复：权限与状态提示逻辑 -->
+        {% if user_role == 'doctor' %}
+            {% if confirmed == 1 %}
+                <div class="section-title">提供专业回复</div>
+                <div class="reply-editor shadow-sm">
+                    <textarea name="content" id="content" placeholder="请根据您的医学知识为该提问提供专业建议..."></textarea>
+                    <div class="text-right">
+                        <button type="button" id="replysub" class="btn-reply"><i class="glyphicon glyphicon-send"></i> 提交回复</button>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-warning shadow-sm" style="border-radius: 12px; margin-bottom: 30px;">
+                    <i class="glyphicon glyphicon-info-sign"></i> <strong>权限限制：</strong>您的医师资质正在审核中或未认证。审核通过后方可为患者提供回复建议。
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <div class="section-title">相关医生回复 ({{ reply_list|length }})</div>
+        <div id="all_reply">
+            {% for reply_info in reply_list %}
+            <div class="reply-item shadow-sm">
+                <div class="reply-content">{{reply_info.content}}</div>
+                <div class="doctor-info">
+                    <div>
+                        <span class="doc-name"><i class="glyphicon glyphicon-user"></i> {{reply_info.doctor.name}}</span>
+                        <span class="doc-hospital">{{reply_info.doctor.hospital}} · {{reply_info.doctor.department}}</span>
+                    </div>
+                    <div class="text-muted small">回复于：{{reply_info.date}} {{reply_info.time}}</div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center" style="padding: 40px; color: #95a5a6; background: white; border-radius: 12px;">
+                <i class="glyphicon glyphicon-info-sign" style="font-size: 30px;"></i>
+                <p style="margin-top: 10px;">暂无医生回复，请耐心等待专业建议。</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <footer class="text-center text-muted" style="margin-top: 50px; padding-bottom: 20px;"><p>© 2025 基层医疗辅助决策平台 | 医患互助模块</p></footer>
+    </div>
+    <div class="goTop"><span class="glyphicon glyphicon-chevron-up"></span></div>
+
+    <script type="text/javascript">
+        var username = '{{username|safe}}';
+        var question_id = '{{question.id|safe}}';
+
+        function addReply(reply, doctor){
+            var all_reply = document.getElementById("all_reply");
+            var item = document.createElement("div");
+            item.className = 'reply-item shadow-sm';
+            item.innerHTML = `
+                <div class="reply-content">${reply.content}</div>
+                <div class="doctor-info">
+                    <div>
+                        <span class="doc-name"><i class="glyphicon glyphicon-user"></i> ${doctor.name}</span>
+                        <span class="doc-hospital">${doctor.hospital} · ${doctor.department}</span>
+                    </div>
+                    <div class="text-muted small">回复于：${reply.date} ${reply.time}</div>
+                </div>
+            `;
+            $(all_reply).prepend(item);
+        }
+
+        window.onload = function(){
+            var Replysub = document.getElementById("replysub");
+            if(Replysub){
+                Replysub.onclick = function(){
+                    var Content = document.getElementById("content");
+                    if(Content.value == ""){ alert("回复内容不能为空"); return; }
+                    $.ajax({
+                        url: '/question_reply/ajax/',
+                        type: 'GET',
+                        data: {'username': username, 'question': question_id, 'content': Content.value},
+                        success: function (data) {
+                            var res = typeof data === 'string' ? eval("(" + data + ")") : data;
+                            if(res.success){
+                                addReply(res.reply, res.doctor);
+                                Content.value = '';
+                                alert('回复成功！');
+                            } else { alert('提交失败，请重试'); }
+                        }
+                    });
+                }
+            }
+        }
+        $(function() {
+            $(window).scroll(function() { if ($(window).scrollTop() > 400) $(".goTop").fadeIn(100); else $(".goTop").fadeOut(200); });
+            $(".goTop").click(function() { $('html,body').animate({scrollTop: 0}, 500); });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>首页 - 基层医疗辅助决策平台</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <!-- 引入资源 -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+
+    <style media="screen">
+        /* 1. 全局设计风格 */
+        body { background-color: #f0f2f5; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; color: #333; overflow-x: hidden; }
+        a { transition: all 0.3s ease; text-decoration: none !important; }
+
+        /* 2. 顶部导航 */
+        .medical-header {
+            background: #2c3e50;
+            color: white;
+            height: 65px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .header-container {
+            display: flex; align-items: center; justify-content: space-between;
+            height: 100%; padding: 0 30px; max-width: 1400px; margin: 0 auto;
+        }
+        .nav-brand { font-size: 19px; font-weight: bold; color: white !important; display: flex; align-items: center; }
+        .nav-brand i { margin-right: 10px; color: #3498db; font-size: 22px; }
+
+        .header-nav { display: flex; list-style: none; margin: 0; padding: 0; height: 100%; }
+        .header-nav a {
+            color: #bdc3c7 !important; padding: 0 20px; display: flex; align-items: center;
+            height: 100%; font-size: 14px; position: relative; transition: 0.3s;
+        }
+        .header-nav a:hover { color: white !important; background: rgba(255,255,255,0.05); }
+        .header-nav a.active { color: white !important; background: #1a252f; }
+
+        .header-right { display: flex; align-items: center; justify-content: flex-end; min-width: 300px; }
+        .status-badge {
+            font-size: 11px; background: rgba(46, 204, 113, 0.2); color: #2ecc71;
+            padding: 3px 10px; border-radius: 12px; border: 1px solid rgba(46, 204, 113, 0.4);
+            margin-right: 20px; white-space: nowrap;
+        }
+        .user-avatar { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #34495e; cursor: pointer; }
+
+        /* 3. 搜索区域 */
+        .hero-section {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            padding: 60px 0; text-align: center; color: white; margin-bottom: 30px;
+        }
+        .hero-section h1 { font-size: 28px; margin-bottom: 25px; font-weight: 300; letter-spacing: 1px; }
+
+        /* --- 搜索框与下拉列表样式 --- */
+        .search-container { max-width: 700px; margin: 0 auto; position: relative; }
+        .form-control-lg {
+            height: 54px; border-radius: 27px 0 0 27px !important; border: none;
+            padding-left: 25px; font-size: 16px;
+        }
+        .btn-search-lg {
+            height: 54px; border-radius: 0 27px 27px 0 !important;
+            background: #3498db; color: white; border: none; padding: 0 35px;
+            font-size: 16px; font-weight: bold;
+        }
+
+        /* 自动补全下拉列表 */
+        #suggestion-list {
+            position: absolute;
+            top: 55px; /* 在输入框正下方 */
+            left: 15px; /* 稍微向右缩进对齐圆角 */
+            width: calc(100% - 130px); /* 减去按钮宽度 */
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 9999;
+            list-style: none;
+            padding: 0; margin: 0;
+            display: none; /* 默认隐藏 */
+            text-align: left;
+            overflow: hidden;
+        }
+        #suggestion-list li {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #f5f5f5;
+            color: #555; font-size: 14px;
+        }
+        #suggestion-list li:hover { background-color: #f0f8ff; color: #3498db; font-weight: bold; }
+        #suggestion-list li i { margin-right: 10px; color: #bdc3c7; }
+
+        /* 4. 功能卡片 */
+        .card-box {
+            background: white; border-radius: 12px; padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #edf2f7;
+        }
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px;
+        }
+        .section-title { font-size: 18px; font-weight: bold; color: #2c3e50; border-left: 5px solid #3498db; padding-left: 12px; }
+
+        /* 5. 导航图标 */
+        /* 快捷图标导航 (Flexbox 增强版) */
+        .nav-icon-group {
+            display: flex;
+            justify-content: space-around; /* 均匀分布 */
+            align-items: center; /* 垂直居中 */
+            flex-wrap: wrap; /* 如果屏幕太窄就换行 */
+        }
+        .icon-nav-item {
+            text-align: center;
+            color: #555;
+            width: 15%; /* 每个图标占 15% 宽度 */
+            min-width: 90px;
+            margin-bottom: 15px; /* 增加底部间距 */
+        }
+        .icon-nav-item img {
+            width: 52px; height: 52px; margin-bottom: 12px; transition: 0.3s;
+        }
+        .icon-nav-item:hover img { transform: translateY(-8px); }
+        .icon-nav-item p { font-size: 14px; font-weight: bold; margin: 0; }
+
+        /* 单独美化“数据大屏”图标 */
+        .icon-nav-custom-bg {
+            background: #3498db; color: white;
+            width: 52px; height: 52px;
+            border-radius: 12px;
+            line-height: 52px;
+            font-size: 24px;
+            margin: 0 auto 12px auto;
+            box-shadow: 0 4px 10px rgba(52,152,219,0.3);
+            transition: 0.3s;
+        }
+        .icon-nav-item:hover .icon-nav-custom-bg {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px rgba(52,152,219,0.4);
+        }
+        .icon-nav-item img { width: 52px; height: 52px; margin-bottom: 12px; transition: 0.3s; }
+        .icon-nav-item:hover img { transform: translateY(-8px); }
+        .icon-nav-item p { font-size: 14px; font-weight: bold; }
+
+        /* 6. 科室网格 */
+        .dept-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+        .dept-link {
+            text-align: center; padding: 15px 5px; border-radius: 8px;
+            border: 1px solid transparent; background: #fbfcfd;
+        }
+        .dept-link:hover { background: white; border-color: #3498db; box-shadow: 0 4px 10px rgba(52,152,219,0.1); }
+        .dept-link img { width: 42px; height: 42px; margin-bottom: 8px; }
+        .dept-link p { font-size: 13px; color: #666; margin: 0; }
+
+        /* 7. 疾病列表 */
+        .disease-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .disease-card {
+            background: #fff; border: 1px solid #f0f0f0; border-radius: 10px;
+            padding: 20px; transition: 0.3s;
+        }
+        .disease-card:hover { transform: scale(1.02); border-color: #3498db; }
+        .disease-name { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 8px; }
+        .disease-badge { background: #eef5ff; color: #3498db; font-size: 12px; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
+        .disease-desc { color: #7f8c8d; font-size: 13px; line-height: 1.6; height: 42px; overflow: hidden; margin-bottom: 12px; }
+        .symptom-tag { font-size: 12px; color: #95a5a6; }
+        .symptom-tag i { color: #3498db; margin-right: 5px; }
+
+        .goTop {
+            height: 46px; width: 46px; background: #2c3e50; color: white;
+            position: fixed; bottom: 40px; right: 30px; display: none;
+            border-radius: 50%; text-align: center; line-height: 46px; cursor: pointer;
+        }
+        footer { background: white; padding: 40px 0; border-top: 1px solid #eee; margin-top: 40px; }
+    </style>
+</head>
+
+<body>
+    <!-- 顶部导航 (最终修正版) -->
+    <header class="medical-header">
+        <div class="header-container">
+            <!-- 1. 左侧品牌 -->
+            <div class="brand-box">
+                <a href="{% url 'wenda:index' %}" class="nav-brand">
+                    <i class="glyphicon glyphicon-plus-sign"></i> 基层医疗辅助决策平台
+                </a>
+            </div>
+
+            <!-- 2. 中间功能导航（已加入数据大屏） -->
+            <ul class="header-nav hidden-xs">
+                <li><a href="{% url 'wenda:index' %}" class="active"><i class="glyphicon glyphicon-home"></i> &nbsp;工作台</a></li>
+{#                <li><a href="{% url 'wenda:wenda' %}"><i class="glyphicon glyphicon-comment"></i> &nbsp;智能问答</a></li>#}
+                <li><a href="{% url 'wenda:department' '全部科室' %}"><i class="glyphicon glyphicon-list-alt"></i> &nbsp;科室索引</a></li>
+{#                <li><a href="{% url 'wenda:wenyi' %}"><i class="glyphicon glyphicon-edit"></i> &nbsp;快速问医</a></li>#}
+                <!-- 新增的数据大屏链接 -->
+                <li>
+                    <a href="{% url 'wenda:analysis' %}">
+                        <i class="glyphicon glyphicon-blackboard"></i> &nbsp;数据大屏
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'wenda:smart_diagnosis' %}" >
+                        <i class="glyphicon glyphicon-flash"></i> &nbsp;智能诊断
+                    </a>
+                </li>
+            </ul>
+
+            <!-- 3. 右侧状态与用户 -->
+            <div class="header-right">
+                <!-- 迷你搜索框已删除 -->
+                <span class="status-badge hidden-xs"><i class="glyphicon glyphicon-lock"></i> AES-256 加密</span>
+                <a href="{% url 'wenda:login'%}">
+                    <img src="{% static 'wenda/images/user.png' %}" class="user-avatar">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 搜索区域 -->
+    <div class="hero-section">
+        <div class="container">
+            <h1>精准医疗知识图谱，辅助基层诊疗决策</h1>
+            <div class="search-container">
+                <!-- 重点：加上 autocomplete="off" 防止浏览器历史记录挡住我们的下拉框 -->
+                <form action="{% url 'wenda:search' %}" method="POST" autocomplete="off">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-lg" placeholder="在此输入疾病症状、药物名称或科室..." name="search_text" id="search_text">
+                        <span class="input-group-btn">
+                            <button type="submit" class="btn btn-search-lg" onclick="onClick()">
+                                <i class="glyphicon glyphicon-search"></i> 开始检索
+                            </button>
+                        </span>
+                    </div>
+                </form>
+                <!-- 这里是自动补全列表的容器 -->
+                <ul id="suggestion-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 快捷入口 -->
+        <!-- 快捷入口 (恢复为5个图标) -->
+        <div class="card-box">
+            <div class="nav-icon-group">
+                <a href="{% url 'wenda:search_more' 'disease'%}" class="icon-nav-item">
+                    <img src="{% static 'wenda/images/search_jib.png' %}"><p>查疾病</p>
+                </a>
+                <a href="{% url 'wenda:search_more' 'symptom'%}" class="icon-nav-item">
+                    <img src="{% static 'wenda/images/search_zz.png' %}"><p>查症状</p>
+                </a>
+                <a href="{% url 'wenda:search_more' 'drug'%}" class="icon-nav-item">
+                    <img src="{% static 'wenda/images/search_yao.png' %}"><p>查药物</p>
+                </a>
+                <a href="{% url 'wenda:wenda'%}" class="icon-nav-item">
+                    <img src="{% static 'wenda/images/qa.png' %}"><p>智能问答</p>
+                </a>
+                <a href="{% url 'wenda:wenyi'%}" class="icon-nav-item">
+                    <img src="{% static 'wenda/images/wy.png' %}"><p>快速问医</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- 按科室查 -->
+        <div class="card-box">
+            <div class="section-header">
+                <span class="section-title">常见科室快速索引</span>
+                <a href="{% url 'wenda:department' '全部科室'%}" class="text-muted small">全部科室 <i class="glyphicon glyphicon-chevron-right"></i></a>
+            </div>
+            <div class="dept-grid text-center">
+                <a class="dept-link" href="{% url 'wenda:department' '妇产科'%}"><img src="{% static 'wenda/images/depart1.png' %}"><p>妇产科</p></a>
+                <a class="dept-link" href="{% url 'wenda:department' '内科'%}"><img src="{% static 'wenda/images/depart2.png' %}"><p>内科</p></a>
+                <a class="dept-link" href="{% url 'wenda:department' '外科'%}"><img src="{% static 'wenda/images/depart3.png' %}"><p>外科</p></a>
+                <a class="dept-link" href="{% url 'wenda:department' '儿科'%}"><img src="{% static 'wenda/images/depart4.png' %}"><p>儿科</p></a>
+                <a class="dept-link" href="{% url 'wenda:department' '皮肤性病科'%}"><img src="{% static 'wenda/images/depart5.png' %}"><p>皮肤科</p></a>
+                <a class="dept-link" href="{% url 'wenda:department' '五官科'%}"><img src="{% static 'wenda/images/depart6.png' %}"><p>五官科</p></a>
+                <a class="dept-link" href="{% url 'wenda:department' '中医科'%}"><img src="{% static 'wenda/images/depart7.png' %}"><p>中医科</p></a>
+                <a class="dept-link" href="{% url 'wenda:department' '男科'%}"><img src="{% static 'wenda/images/depart8.png' %}"><p>男科</p></a>
+                <a class="dept-link" href="{% url 'wenda:department' '肿瘤科'%}"><img src="{% static 'wenda/images/depart9.png' %}"><p>肿瘤科</p></a>
+                <a class="dept-link" href="{% url 'wenda:department' '精神科'%}"><img src="{% static 'wenda/images/depart10.png' %}"><p>精神科</p></a>
+            </div>
+        </div>
+
+        <!-- 疾病展示 -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card-box">
+                    <div class="section-header">
+                        <span class="section-title">女性高发病关注</span>
+                        <a href="{% url 'wenda:population' '女性'%}" class="text-muted small">更多</a>
+                    </div>
+                    <a href="{% url 'wenda:disease' '阴道炎'%}">
+                        <div class="disease-card">
+                            <div class="disease-name">阴道炎 <span class="disease-badge">妇科</span></div>
+                            <div class="disease-desc">阴道黏膜及黏膜下结缔组织的炎症，是妇科门诊常见的疾病。正常妇女阴道对病原体有自然防御功能...</div>
+                            <div class="symptom-tag"><i class="glyphicon glyphicon-tags"></i> 症状: 白带发黄、外阴瘙痒、性交疼痛</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card-box">
+                    <div class="section-header">
+                        <span class="section-title">儿童健康决策</span>
+                        <a href="{% url 'wenda:population' '儿童'%}" class="text-muted small">更多</a>
+                    </div>
+                    <a href="{% url 'wenda:disease' '小儿发烧'%}">
+                        <div class="disease-card">
+                            <div class="disease-name">小儿发烧 <span class="disease-badge">儿科</span></div>
+                            <div class="disease-desc">腋温超过37.4℃即为发热。低热指37.5℃～38℃、中度热38.1～39℃、高热39.1℃以上...</div>
+                            <div class="symptom-tag"><i class="glyphicon glyphicon-tags"></i> 症状: 低热、发烧、高热、咽部充血</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 返回顶部 -->
+    <div class="goTop"><i class="glyphicon glyphicon-arrow-up"></i></div>
+
+    <footer class="text-center text-muted">
+        <div class="container">
+            <p style="margin-bottom: 5px;">© 2026 基层医疗辅助决策平台 v1.0</p>
+            <p class="small">© 2026 基于医学知识图谱的决策支持系统 | 声明：数据仅供医疗参考</p>
+        </div>
+    </footer>
+
+    <!-- 交互脚本 -->
+    <script>
+        function onClick() {
+            var text = document.getElementById("search_text");
+            if(text.value == '') alert('请输入诊疗关键词');
+        }
+
+        $(function() {
+            // 返回顶部逻辑
+            $(window).scroll(function() {
+                if ($(this).scrollTop() > 400) { $(".goTop").fadeIn(); }
+                else { $(".goTop").fadeOut(); }
+            });
+            $(".goTop").click(function() {
+                $('html,body').animate({scrollTop: 0}, 500);
+            });
+
+            // ------------------------------------
+            // 搜索建议功能核心逻辑
+            // ------------------------------------
+            var $input = $('#search_text');
+            var $list = $('#suggestion-list');
+
+            // 监听输入
+            $input.on('input', function(){
+                var keyword = $(this).val().trim();
+                if(keyword.length === 0) {
+                    $list.hide().empty();
+                    return;
+                }
+
+                // AJAX 请求后台接口
+                $.ajax({
+                    url: '/autocomplete/',  // 对应 urls.py 里的路由
+                    data: {'keyword': keyword},
+                    dataType: 'json',
+                    success: function(res) {
+                        var data = res.list;
+                        $list.empty();
+                        if(data && data.length > 0) {
+                            // 渲染列表项
+                            $.each(data, function(index, item){
+                                var html = '<li><i class="glyphicon glyphicon-search"></i> ' + item + '</li>';
+                                $list.append(html);
+                            });
+                            $list.show();
+                        } else {
+                            $list.hide();
+                        }
+                    },
+                    error: function(err) {
+                        console.log("搜索建议接口调用失败:", err);
+                    }
+                });
+            });
+
+            // 点击建议项：自动填充并隐藏列表
+            $list.on('click', 'li', function(){
+                var text = $(this).text().trim();
+                $input.val(text);
+                $list.hide();
+            });
+
+            // 点击页面空白处：隐藏列表
+            $(document).on('click', function(e){
+                if(!$(e.target).closest('.search-container').length) {
+                    $list.hide();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

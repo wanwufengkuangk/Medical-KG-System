@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>疾病详情 - 基层医疗辅助决策平台</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <!-- 引入资源 -->
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+
+    <style media="screen">
+        /* 1. 全局布局样式 (与全站一致) */
+        body { background-color: #f0f2f5; font-family: "Microsoft YaHei", sans-serif; margin: 0; }
+
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 220px;
+            background: #2c3e50; color: white; padding-top: 20px; z-index: 1000;
+        }
+        .sidebar-brand { text-align: center; padding: 20px 10px; border-bottom: 1px solid #3e4f5f; margin-bottom: 20px; }
+        .sidebar-nav a {
+            display: block; color: #abb1b7; padding: 15px 25px; text-decoration: none; transition: 0.3s;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: #1a252f; color: #3498db; border-left: 4px solid #3498db; text-decoration: none; }
+        .sidebar-nav i { margin-right: 10px; }
+
+        .main-wrapper { margin-left: 220px; padding: 20px; }
+        .workstation-header {
+            background: white; padding: 15px 25px; margin-bottom: 20px;
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* 2. 疾病档案卡片美化 */
+        .disease-card { background: white; border-radius: 12px; padding: 30px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+        /* 头部信息 */
+        .disease-title-area { border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+        .disease-name { font-size: 32px; font-weight: bold; color: #2c3e50; margin-right: 15px; }
+        .disease-kind { background: #eef5ff; color: #3498db; padding: 4px 12px; border-radius: 20px; font-size: 14px; }
+        .disease-alias { color: #95a5a6; margin-top: 10px; font-size: 15px; }
+
+        /* 简介区域 */
+        .brief-box { line-height: 1.8; color: #444; font-size: 16px; overflow: hidden; height: 100px; transition: 0.3s; }
+        .brief-open {
+            background: #f8f9fa; text-align: center; color: #3498db; cursor: pointer;
+            padding: 8px; border-radius: 4px; margin-top: 10px; font-weight: bold;
+        }
+        .brief-open:hover { background: #eef5ff; }
+
+        /* 3. 网格化信息条目 (替代原来的堆叠排列) */
+        .info-grid { display: flex; flex-wrap: wrap; border-top: 1px solid #f0f0f0; padding-top: 10px; }
+        .info-item { width: 50%; padding: 15px 10px; border-bottom: 1px dashed #f0f0f0; }
+        .info-label { color: #7f8c8d; font-weight: bold; width: 100px; display: inline-block; }
+        .info-value { color: #2c3e50; }
+
+        /* 4. 关联推荐 (标签样式) */
+        .relation-box { margin-top: 20px; }
+        .relation-title { font-weight: bold; color: #2c3e50; margin-bottom: 15px; border-left: 4px solid #3498db; padding-left: 10px; }
+        .medical-tag {
+            display: inline-block; background: #f4f7f9; color: #5d6d7e; padding: 6px 15px;
+            border-radius: 4px; margin: 0 10px 10px 0; text-decoration: none !important;
+            border: 1px solid #dcdfe6; transition: 0.2s;
+        }
+        .medical-tag:hover { background: #3498db; color: white !important; border-color: #3498db; }
+
+        .goTop {
+            height: 40px; width: 40px; background: #2c3e50; color: white;
+            position: fixed; bottom: 50px; right: 30px; display: none;
+            text-align: center; line-height: 40px; border-radius: 4px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 左侧导航栏 (全站统一) -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h4>医疗决策系统</h4>
+            <p style="font-size: 10px; color: #888;">Primary Medical Platform</p>
+        </div>
+        <div class="sidebar-nav">
+            <a href="{% url 'wenda:index' %}"><i class="glyphicon glyphicon-home"></i> <span>诊疗工作台</span></a>
+            <a href="{% url 'wenda:wenda' %}"><i class="glyphicon glyphicon-comment"></i> <span>智能问答</span></a>
+            <a href="{% url 'wenda:wenyi' %}"><i class="glyphicon glyphicon-edit"></i> <span>快速问医</span></a>
+            <a href="{% url 'wenda:department' '全部科室' %}"><i class="glyphicon glyphicon-th-list"></i> <span>科室索引</span></a>
+            <a href="{% url 'wenda:login' %}"><i class="glyphicon glyphicon-user"></i> <span>个人中心</span></a>
+        </div>
+    </div>
+
+    <!-- 右侧主体内容 -->
+    <div class="main-wrapper">
+        <header class="workstation-header">
+            <div><span class="text-muted">当前位置：</span> <strong>疾病百科详细档案</strong></div>
+            <div id="feedback">
+                <!-- 由 JS 根据权限动态填入反馈链接 -->
+            </div>
+        </header>
+
+        <!-- 疾病核心档案卡片 -->
+        <div class="disease-card">
+            <!-- 头部 -->
+            <div class="disease-title-area">
+                <span class="disease-name" id="disease">正在加载...</span>
+                <span class="disease-kind" id="kind"></span>
+                <div class="disease-alias">别名：<span id="alias">--</span></div>
+            </div>
+
+            <!-- 简介 -->
+            <div class="relation-title">疾病简介</div>
+            <div class="brief-box" id="brief"></div>
+            <div class="brief-open">展开全部详情 <i class="glyphicon glyphicon-menu-down"></i></div>
+
+            <!-- 参数属性网格 -->
+            <div class="info-grid" style="margin-top: 30px;">
+                <div class="info-item"><span class="info-label">挂什么科：</span><span class="info-value" id="department">--</span></div>
+                <div class="info-item"><span class="info-label">需做检查：</span><span class="info-value" id="check">--</span></div>
+                <div class="info-item"><span class="info-label">治疗方法：</span><span class="info-value" id="method">--</span></div>
+                <div class="info-item"><span class="info-label">一般费用：</span><span class="info-value" id="fee">--</span></div>
+                <div class="info-item"><span class="info-label">传染性：</span><span class="info-value" id="infect">--</span></div>
+                <div class="info-item"><span class="info-label">治愈周期：</span><span class="info-value" id="cure_period">--</span></div>
+                <div class="info-item"><span class="info-label">治愈率：</span><span class="info-value" id="cure_rate">--</span></div>
+                <div class="info-item"><span class="info-label">患病比例：</span><span class="info-value" id="proportion">--</span></div>
+                <div class="info-item" style="width: 100%;"><span class="info-label">好发人群：</span><span class="info-value" id="population">--</span></div>
+            </div>
+        </div>
+
+        <!-- 关联决策卡片 -->
+        <div class="disease-card">
+            <div class="relation-box">
+                <div class="relation-title">推荐药物 (常用药)</div>
+                <div id="drug">
+                    {% for drug in disease_info.drug %}
+                        <a href="{% url 'wenda:drug' drug %}" class="medical-tag">{{drug}}</a>
+                    {% empty %}
+                        <span class="text-muted">暂无相关药物信息</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="relation-box" style="margin-top: 40px;">
+                <div class="relation-title">典型关联症状</div>
+                <div id="r_symptom">
+                    {% for symptom in disease_info.r_symptom %}
+                        <a href="{% url 'wenda:symptom' symptom %}" class="medical-tag">{{symptom}}</a>
+                    {% empty %}
+                        <span class="text-muted">暂无关联症状信息</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="relation-box" style="margin-top: 40px;">
+                <div class="relation-title">可能伴随疾病</div>
+                <div id="r_disease">
+                    {% for disease in disease_info.r_disease %}
+                        <a href="{% url 'wenda:disease' disease %}" class="medical-tag">{{disease}}</a>
+                    {% empty %}
+                        <span class="text-muted">暂无相关疾病信息</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center text-muted" style="margin-top: 50px; padding-bottom: 20px;">
+            <p>© 2026 基层医疗辅助决策平台 | 数据支持：Neo4j 医学知识图谱</p>
+        </footer>
+    </div>
+
+    <!-- 返回顶部 -->
+    <div class="goTop">
+        <span class="glyphicon glyphicon-chevron-up"></span>
+    </div>
+
+    <!-- 逻辑代码部分：完全保留原有的业务逻辑 -->
+    <script type="text/javascript">
+        // 展开/收起逻辑
+        $('.brief-open').click(function(){
+            var target = $('#brief');
+            if(target.css("height") == "100px"){
+                target.css("height","auto");
+                $(this).html('收起详情 <i class="glyphicon glyphicon-menu-up"></i>');
+            } else {
+                target.css("height","100px");
+                $(this).html('展开全部详情 <i class="glyphicon glyphicon-menu-down"></i>');
+            }
+        });
+    </script>
+
+    <script type="text/javascript" src="{% static 'wenda/js/disease.js' %}"></script>
+    <script type="text/javascript">
+        // 初始化数据
+        var disease_info = {{ disease_info|safe }};
+        diseaseInfo(disease_info); // 调用外部 js 渲染 ID
+
+        // 反馈逻辑保留
+        function getCookie(cname){
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0; i<ca.length; i++) {
+                var c = ca[i].trim();
+                if (c.indexOf(name)==0) { return c.substring(name.length,c.length); }
+            }
+            return "";
+        }
+        var user_role = getCookie("user_role");
+        if(user_role == 'doctor'){
+            $("#feedback").html('<a href="{% url 'wenda:feedback' 'disease'%}" class="btn btn-warning btn-xs"><i class="glyphicon glyphicon-edit"></i> 发现错误？点击反馈</a>');
+        }
+
+        // 返回顶部
+        $(function() {
+            $(window).scroll(function() {
+                if ($(window).scrollTop() > 400) { $(".goTop").fadeIn(100); }
+                else { $(".goTop").fadeOut(200); }
+            });
+            $(".goTop").click(function() { $('html,body').animate({scrollTop: 0}, 500); });
+        });
+    </script>
+</body>
+</html>

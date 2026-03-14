@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <title>医师实名认证 - 医疗辅助决策平台</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'wenda/js/bootstrap.min.js' %}"></script>
+
+    <style media="screen">
+        /* 1. 基础样式与背景 */
+        body { background-color: #f4f7f9; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; }
+
+        /* 2. 头部导航 (与全站统一) */
+        header { background: white !important; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .nav-brand-custom { font-size: 20px; font-weight: 700; color: #2c3e50; text-decoration: none !important; }
+
+        /* 3. 认证表单卡片 */
+        .auth-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(50, 50, 93, 0.08);
+            margin: 20px auto;
+            max-width: 600px;
+            border-top: 4px solid #3498db;
+        }
+
+        .auth-header { text-align: center; margin-bottom: 30px; }
+        .auth-header i { font-size: 40px; color: #3498db; margin-bottom: 15px; }
+        .auth-header h2 { color: #2c3e50; font-size: 22px; font-weight: bold; margin: 0 0 10px 0; }
+        .auth-header p { color: #7f8c8d; font-size: 13px; margin: 0; }
+
+        /* 4. 表单元素美化 */
+        .form-group { margin-bottom: 20px; }
+        .form-group label { color: #34495e; font-size: 14px; font-weight: 600; margin-bottom: 8px; display: block; }
+        .form-control {
+            height: 48px; border-radius: 6px; border: 1px solid #dcdfe6;
+            background-color: #fcfdfe; transition: all 0.3s; box-shadow: none;
+        }
+        .form-control:focus {
+            border-color: #3498db; background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        /* 必填项红星 */
+        .text-danger { color: #e74c3c; margin-left: 3px; }
+
+        /* 5. 按钮美化 */
+        .btn-submit {
+            background: #3498db; color: white; border: none; height: 50px;
+            width: 100%; font-size: 16px; font-weight: bold; border-radius: 6px;
+            transition: 0.3s; margin-top: 15px;
+        }
+        .btn-submit:hover { background: #2980b9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3); color: white;}
+        .btn-cancel {
+            background: transparent; color: #95a5a6; border: 1px solid #dcdfe6; height: 50px;
+            width: 100%; font-size: 16px; font-weight: 600; border-radius: 6px;
+            transition: 0.3s; margin-top: 15px;
+        }
+        .btn-cancel:hover { background: #f8f9fa; color: #34495e; border-color: #bdc3c7; }
+
+        /* 返回顶部 */
+        .goTop {
+            height: 45px; width: 45px; background: #2c3e50; border-radius: 50%;
+            position: fixed; top: 85%; right: 3%; display: none;
+            padding: 12px; text-align: center; color: white; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        footer { padding: 30px 0; color: #95a5a6; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <!-- 头部导航 -->
+    <header class="row">
+        <div class="container">
+            <nav style="text-align:center; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="width: 40px;"></div> <!-- 占位平衡 -->
+                <a href="{% url 'wenda:index' %}" class="nav-brand-custom">
+                    <i class="glyphicon glyphicon-plus-sign" style="color:#3498db;"></i> 医疗决策系统
+                </a>
+                <a href="{% url 'wenda:login'%}">
+                    <img src="{% static 'wenda/images/user.png' %}" style="width:32px; height:32px; opacity: 0.7;">
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- 认证表单卡片 -->
+        <div class="auth-card">
+            <div class="auth-header">
+                <i class="glyphicon glyphicon-education"></i>
+                <h2>医师执业资格认证</h2>
+                <p>为保障平台专业性，请填写真实执业信息，系统将在1-3个工作日内完成审核</p>
+            </div>
+
+            <form action="{% url 'wenda:renz' %}" method="post">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label>真实姓名 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="name" placeholder="请输入与执业证一致的姓名" required />
+                </div>
+
+                <div class="form-group">
+                    <label>医师执业证书编码 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="certificate" placeholder="请输入15位执业证书编码" required />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>所在省市 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="hospital_region" placeholder="例：北京市 海淀区" required />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>执业医疗机构 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="hospital" placeholder="请输入全称" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>负责科室 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="department" placeholder="例：心血管内科" required />
+                </div>
+
+                <div style="display: none;">
+                    <input type="text" name="next_url" value="{{ next_url }}" />
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <button type="submit" class="btn btn-submit">提交审核</button>
+                    </div>
+                    <div class="col-xs-12">
+                        <button type="button" class="btn btn-cancel" onclick="history.back()">暂不认证，返回上一页</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="goTop">
+            <span class="glyphicon glyphicon-chevron-up"></span>
+        </div>
+
+        <!-- 底部版权 -->
+        <footer class="text-center">
+            <p>© 2026 基层医疗辅助决策平台 | 我们将严格保护您的隐私数据安全</p>
+        </footer>
+    </div>
+
+    <!-- 返回顶部脚本 -->
+    <script type="text/javascript">
+        function goTop(min_height) {
+            $(".goTop").click(function() {
+                $('html,body').animate({ scrollTop: 0 }, 500);
+            });
+            min_height = min_height ? min_height : 400;
+            $(window).scroll(function() {
+                if ($(window).scrollTop() > min_height) {
+                    $(".goTop").fadeIn(100);
+                } else {
+                    $(".goTop").fadeOut(200);
+                }
+            });
+        }
+        $(function() { goTop(); });
+    </script>
+</body>
+</html>
