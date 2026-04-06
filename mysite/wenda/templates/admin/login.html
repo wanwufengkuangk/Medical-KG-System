@@ -1,0 +1,117 @@
+{% extends "registration/base.html" %}
+
+{% load i18n jazzmin static %}
+{% get_jazzmin_settings request as jazzmin_settings %}
+{% get_jazzmin_ui_tweaks as jazzmin_ui %}
+
+{% block content %}
+<section class="mc-login-shell">
+    <div class="mc-login-brand">
+        <div class="mc-login-brand-copy">
+            <span class="mc-kicker">Medical Control Access</span>
+            <h1>进入基层医疗辅助决策平台管理端</h1>
+            <p>统一处理医师审核、问答巡检、用户反馈与后台数据维护。界面以低干扰、高信噪比为目标，帮助管理员更快完成判断与处理。</p>
+
+            <div class="mc-login-points">
+                <div class="mc-login-point">
+                    <strong>医师审核优先</strong>
+                    <span>先处理待审核资料，快速判断信息完整度与执业可信度。</span>
+                </div>
+                <div class="mc-login-point">
+                    <strong>问答巡检闭环</strong>
+                    <span>围绕提问与回复联动查看，减少来回跳转带来的操作负担。</span>
+                </div>
+                <div class="mc-login-point">
+                    <strong>反馈分级排查</strong>
+                    <span>优先识别报错、异常、无法使用等高风险问题，提高处理响应速度。</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mc-login-visual">
+            <img src="https://api.iconify.design/twemoji/hospital.svg" alt="医疗管理端" style="width: 120px; height: 120px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));">
+            <div>
+                <strong>管理端工作提示</strong>
+                <span>建议登录后先查看待审核医师与高优先级反馈，再进入问答巡检，确保每天的后台处理节奏更稳定。</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="mc-login-formwrap">
+        <p class="login-box-msg">{{ jazzmin_settings.welcome_sign }}</p>
+        <form action="{{ app_path }}" method="post">
+            {% csrf_token %}
+            {% if user.is_authenticated %}
+                <div class="callout callout-danger">
+                    <p>
+                        {% blocktrans trimmed %}
+                            You are authenticated as {{ username }}, but are not authorized to
+                            access this page. Would you like to login to a different account?
+                        {% endblocktrans %}
+                    </p>
+                </div>
+            {% endif %}
+            {% if form.errors %}
+                {% if form.username.errors %}
+                    <div class="callout callout-danger">
+                        <p>{{ form.username.label }}: {{ form.username.errors|join:', ' }}</p>
+                    </div>
+                {% endif %}
+                {% if form.password.errors %}
+                    <div class="callout callout-danger">
+                        <p>{{ form.password.label }}: {{ form.password.errors|join:', ' }}</p>
+                    </div>
+                {% endif %}
+                {% if form.non_field_errors %}
+                    <div class="callout callout-danger">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endif %}
+
+            <div class="input-group mb-3">
+                <input type="text" name="username" class="form-control" placeholder="{{ form.username.label }}" required>
+                <div class="input-group-append">
+                    <div class="input-group-text">
+                        <span class="fas fa-user"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group mb-3">
+                <input type="password" name="password" class="form-control" placeholder="{{ form.password.label }}" required>
+                <div class="input-group-append">
+                    <div class="input-group-text">
+                        <span class="fas fa-lock"></span>
+                    </div>
+                </div>
+            </div>
+
+            {% url 'admin_password_reset' as password_reset_url %}
+            {% if password_reset_url %}
+                <div class="mb-3">
+                    <div class="password-reset-link" style="text-align: left;">
+                        <a href="{{ password_reset_url }}">
+                            {% trans 'Forgotten your password or username?' %}
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-12">
+                    <button type="submit" class="btn {{ jazzmin_ui.button_classes.primary }} btn-block">
+                        {% trans "Log in" %}
+                    </button>
+                </div>
+            </div>
+
+            <div class="mc-login-helper">
+                <strong>提示：</strong>仅后台管理员和具备权限的审核人员可登录此页面。
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

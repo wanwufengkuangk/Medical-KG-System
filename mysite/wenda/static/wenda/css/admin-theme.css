@@ -1,0 +1,143 @@
+/* =========================================================
+   医疗决策系统 - 商业级后台定制 CSS (适配 Jazzmin)
+========================================================= */
+
+:root {
+    /* 核心色彩体系 */
+    --mc-primary: #3498db;         /* 医疗蓝 */
+    --mc-primary-strong: #2980b9;
+    --mc-success: #2ecc71;
+    --mc-warning: #f39c12;
+    --mc-danger: #e74c3c;
+    --mc-bg: #f4f7f9;              /* 全局浅灰蓝背景 */
+    --mc-surface: #ffffff;         /* 卡片纯白背景 */
+    --mc-text: #2c3e50;            /* 主文本藏青色 */
+    --mc-text-soft: #7f8c8d;
+    --mc-border: #edf2f6;
+    
+    /* 侧边栏专属 */
+    --mc-sidebar: #1a252f;
+    --mc-sidebar-hover: rgba(255, 255, 255, 0.08);
+    --mc-sidebar-active: rgba(52, 152, 219, 0.2);
+
+    /* 阴影与圆角 (精髓所在) */
+    --mc-shadow: 0 12px 28px rgba(26, 37, 47, 0.08);
+    --mc-shadow-soft: 0 6px 16px rgba(26, 37, 47, 0.04);
+    --mc-radius: 8px;
+    --mc-radius-lg: 16px;
+    --mc-transition: 0.3s ease;
+}
+
+/* 1. 全局与字体 */
+body, .wrapper, .content-wrapper, .main-footer {
+    background: var(--mc-bg) !important;
+    color: var(--mc-text) !important;
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif !important;
+}
+
+/* 2. 侧边栏美化 (Sidebar) */
+.main-sidebar, .brand-link {
+    background: var(--mc-sidebar) !important;
+    border-right: none !important;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1) !important;
+}
+.brand-link { border-bottom: 1px solid rgba(255,255,255,0.05) !important; padding: 20px 15px !important; }
+.brand-text { font-weight: bold !important; letter-spacing: 1px; font-size: 18px !important; }
+
+/* 侧边栏菜单悬停与激活 */
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link {
+    border-radius: var(--mc-radius) !important;
+    margin: 4px 12px !important;
+    transition: all var(--mc-transition) !important;
+    color: rgba(255,255,255,0.7) !important;
+}
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link:hover {
+    background: var(--mc-sidebar-hover) !important;
+    color: #fff !important;
+    transform: translateX(4px);
+}
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active {
+    background: var(--mc-sidebar-active) !important;
+    color: #fff !important;
+    box-shadow: inset 4px 0 0 var(--mc-primary) !important;
+}
+
+/* 3. 顶部状态栏美化 (Navbar) */
+.main-header {
+    background: var(--mc-surface) !important;
+    border-bottom: 1px solid var(--mc-border) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02) !important;
+}
+.main-header .nav-link { color: var(--mc-text-soft) !important; }
+
+/* 4. 数据卡片与表单区美化 (Cards) */
+.card {
+    background: var(--mc-surface) !important;
+    border: none !important;
+    border-radius: var(--mc-radius-lg) !important;
+    box-shadow: var(--mc-shadow-soft) !important;
+    margin-bottom: 24px !important;
+}
+.card-header {
+    background: transparent !important;
+    border-bottom: 1px solid var(--mc-border) !important;
+    padding: 18px 24px !important;
+}
+.card-title { font-weight: bold !important; color: var(--mc-text) !important; border-left: 4px solid var(--mc-primary); padding-left: 10px;}
+
+/* 5. 按钮全局美化 (Buttons) */
+.btn {
+    border-radius: var(--mc-radius) !important;
+    font-weight: 600 !important;
+    padding: 8px 16px !important;
+    transition: all var(--mc-transition) !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn-primary, .btn-info, .btn-success { background: var(--mc-primary) !important; color: #fff !important; }
+.btn-primary:hover { background: var(--mc-primary-strong) !important; box-shadow: 0 6px 15px rgba(52,152,219,0.3) !important; }
+.btn-danger { background: rgba(231, 76, 60, 0.1) !important; color: var(--mc-danger) !important; }
+.btn-danger:hover { background: var(--mc-danger) !important; color: white !important; }
+
+/* 6. 输入框美化 (Inputs) */
+.form-control, select, textarea {
+    border-radius: var(--mc-radius) !important;
+    border: 1px solid #d9e3ec !important;
+    padding: 10px 15px !important;
+    box-shadow: none !important;
+    transition: all var(--mc-transition) !important;
+}
+.form-control:focus {
+    border-color: var(--mc-primary) !important;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15) !important;
+}
+
+/* 7. 表格美化 (Tables) */
+.table th {
+    background: #f8fafc !important;
+    border-bottom: 2px solid var(--mc-border) !important;
+    border-top: none !important;
+    color: var(--mc-text-soft) !important;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+.table td { border-bottom: 1px solid var(--mc-border) !important; vertical-align: middle !important; }
+.table-striped tbody tr:nth-of-type(odd) { background-color: rgba(244, 247, 249, 0.4) !important; }
+.table-hover tbody tr:hover { background-color: #f0f7fb !important; }
+
+/* 8. 史诗级优化：登录页面 (Login Page) */
+.login-page {
+    background: linear-gradient(135deg, #f4f7f9 0%, #e0eafc 100%) !important;
+    display: flex; align-items: center; justify-content: center;
+}
+.login-box { width: 420px !important; }
+.login-box .card {
+    border-radius: 20px !important;
+    box-shadow: 0 20px 50px rgba(44, 62, 80, 0.15) !important;
+    padding: 20px !important;
+    background: rgba(255,255,255,0.95) !important;
+    backdrop-filter: blur(10px);
+}
+.login-logo a { font-weight: bold !important; color: var(--mc-text) !important; font-size: 28px !important; }

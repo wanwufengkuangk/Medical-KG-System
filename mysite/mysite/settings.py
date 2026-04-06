@@ -56,7 +56,7 @@ ROOT_URLCONF = 'mysite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -64,6 +64,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'wenda.context_processors.admin_dashboard_context',
             ],
         },
     },
@@ -96,20 +97,7 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
+AUTH_PASSWORD_VALIDATORS = []
 
 
 # Internationalization
@@ -133,20 +121,29 @@ STATIC_URL = '/static/'
 
 JAZZMIN_SETTINGS = {
     # 网站标题
-    "site_title": "医疗决策系统",
-    "site_header": "医疗系统后台",
-    "site_brand": "辅助决策平台",
+    "site_title": "医疗中控台",
+    "site_header": "智慧医疗中控台",
+    "site_brand": "Medical Control",
+    "site_logo": "wenda/images/wenda.png",
+    "site_logo_classes": "img-circle elevation-2",
+    "site_icon": "wenda/images/wenda.png",
+    "login_logo": "wenda/images/wenda.png",
+    "login_logo_dark": "wenda/images/wenda.png",
 
     # 欢迎语
-    "welcome_sign": "欢迎管理员登录医疗控制台",
-    "copyright": "2026 基层医疗辅助决策平台",
+    "welcome_sign": "欢迎进入临床数据与问答运营后台",
+    "copyright": "2026 基层智慧医疗辅助决策平台",
 
     # 侧边栏设置
     "show_sidebar": True,
     "navigation_expanded": True,
+    "show_ui_builder": False,
+    "changeform_format": "horizontal_tabs",
+    "related_modal_active": True,
 
     # 顶部搜索框：可以直接搜医生名字
     "search_model": "wenda.Doctor",
+    "custom_css": "wenda/css/admin-theme.css",
 
     # 图标设置 (让界面更生动)
     "icons": {
@@ -164,30 +161,35 @@ JAZZMIN_SETTINGS = {
 
     # 这里的顺序决定侧边栏的排序
     "order_with_respect_to": ["wenda", "auth"],
+    "topmenu_links": [
+        {"name": "工作台", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"model": "wenda.Doctor"},
+        {"model": "wenda.Question"},
+        {"model": "wenda.Feedback"},
+    ],
 }
 
 # Jazzmin 界面风格微调 (医疗蓝专业版)
 JAZZMIN_UI_TWEAKS = {
-    # 1. 主题选择：flatly 是最干净、最现代的扁平化主题
-    "theme": "flatly",
-
-    # 2. 顶部导航栏：使用深蓝色 (primary)，文字白色 (navbar-dark)
-    "navbar": "navbar-dark bg-primary",
-
-    # 3. 侧边栏：使用深色背景，保持沉稳
+    "theme": "minty",
+    "dark_mode_theme": None,
+    "navbar": "navbar-dark",
     "sidebar": "sidebar-dark-primary",
-
-    # 4. 左上角 Logo 区域：也用深蓝色，与顶部融为一体
-    "brand_colour": "navbar-primary",
-
-    # 5. 其它细节
-    "accent": "accent-primary",
+    "brand_colour": "navbar-navy",
+    "accent": "accent-info",
+    "navbar_small_text": False,
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
     "button_classes": {
-        "primary": "btn-primary",
+        "primary": "btn-info",
         "secondary": "btn-secondary",
-        "info": "btn-info",
+        "info": "btn-outline-info",
         "warning": "btn-warning",
         "danger": "btn-danger",
         "success": "btn-success"
-    }
+    },
+    "custom_css": "wenda/css/admin_custom.css",
 }

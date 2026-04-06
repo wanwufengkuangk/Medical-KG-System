@@ -1,0 +1,276 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<section class="mc-dashboard">
+    <div class="mc-hero">
+        <div class="mc-hero-copy">
+            <span class="mc-kicker">Medical Operations Console</span>
+            <h1>基层医疗辅助决策平台管理中台</h1>
+            <p>围绕医师审核、问答巡检、反馈处理与数据维护构建统一工作入口，让管理员优先看到待办、快速定位风险、稳定推进日常运营。</p>
+            <div class="mc-hero-actions">
+                <a class="btn btn-info" href="{% url 'admin:wenda_doctor_changelist' %}?confirmed__exact=-1">
+                    <i class="fas fa-user-md mr-2"></i>进入医师审核
+                </a>
+                <a class="btn btn-outline-info" href="{% url 'admin:wenda_feedback_changelist' %}">
+                    <i class="fas fa-inbox mr-2"></i>查看用户反馈
+                </a>
+            </div>
+        </div>
+        <div class="mc-hero-panel">
+            <div class="mc-status-card">
+                <span class="mc-status-label">当前工作台</span>
+                <strong>管理端总览</strong>
+                <p>面向系统管理员、数据审核员和高级医师，强调效率、清晰与低干扰的医疗后台体验。</p>
+            </div>
+            <div class="mc-status-grid">
+                <div class="mc-status-chip">
+                    <span>核心应用</span>
+                    <strong>{{ app_list|length }}</strong>
+                </div>
+                <div class="mc-status-chip">
+                    <span>控制台状态</span>
+                    <strong>在线</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mc-quick-grid">
+        <a class="mc-quick-card" href="{% url 'admin:wenda_doctor_changelist' %}?confirmed__exact=-1">
+            <span class="mc-quick-icon"><i class="fas fa-id-card-alt"></i></span>
+            <h3>医师审核</h3>
+            <p>集中查看认证信息、医院归属、科室资料和审核状态，优先处理待审核记录。</p>
+        </a>
+        <a class="mc-quick-card" href="{% url 'admin:wenda_user_changelist' %}">
+            <span class="mc-quick-icon"><i class="fas fa-users"></i></span>
+            <h3>用户档案</h3>
+            <p>快速检索患者账户、联系方式和基础资料，减少跨页面查找成本。</p>
+        </a>
+        <a class="mc-quick-card" href="{% url 'admin:wenda_question_changelist' %}?reply_status=pending">
+            <span class="mc-quick-icon"><i class="fas fa-comment-medical"></i></span>
+            <h3>问答巡检</h3>
+            <p>聚焦未回复问题与最新回复记录，帮助管理员及时跟进问答闭环。</p>
+        </a>
+        <a class="mc-quick-card" href="{% url 'admin:wenda_feedback_changelist' %}?priority_level=high">
+            <span class="mc-quick-icon"><i class="fas fa-exclamation-circle"></i></span>
+            <h3>反馈中心</h3>
+            <p>按优先级梳理报错、异常、建议和体验问题，优先排查高风险内容。</p>
+        </a>
+    </div>
+
+    <div class="mc-metric-grid">
+        <div class="mc-metric-card">
+            <span class="mc-metric-label">待审核医师</span>
+            <strong>{{ admin_dashboard_metrics.pending_doctors|default:0 }}</strong>
+            <p>建议优先完成身份与执业信息校验，缩短审核等待时间。</p>
+        </div>
+        <div class="mc-metric-card">
+            <span class="mc-metric-label">已通过医师</span>
+            <strong>{{ admin_dashboard_metrics.approved_doctors|default:0 }}</strong>
+            <p>已进入稳定服务状态的医师档案数量。</p>
+        </div>
+        <div class="mc-metric-card">
+            <span class="mc-metric-label">医师总数</span>
+            <strong>{{ admin_dashboard_metrics.total_doctors|default:0 }}</strong>
+            <p>当前后台可维护的全部医师资料记录。</p>
+        </div>
+        <div class="mc-metric-card">
+            <span class="mc-metric-label">用户总数</span>
+            <strong>{{ admin_dashboard_metrics.total_users|default:0 }}</strong>
+            <p>平台已登记用户数量，便于把握整体服务规模。</p>
+        </div>
+        <div class="mc-metric-card">
+            <span class="mc-metric-label">提问总数</span>
+            <strong>{{ admin_dashboard_metrics.total_questions|default:0 }}</strong>
+            <p>沉淀的问答问题总量，可用于巡检与质量复核。</p>
+        </div>
+        <div class="mc-metric-card">
+            <span class="mc-metric-label">回复总数</span>
+            <strong>{{ admin_dashboard_metrics.total_replies|default:0 }}</strong>
+            <p>医师端累计回复数据，可辅助评估问答活跃度。</p>
+        </div>
+        <div class="mc-metric-card">
+            <span class="mc-metric-label">反馈总数</span>
+            <strong>{{ admin_dashboard_metrics.total_feedback|default:0 }}</strong>
+            <p>来自患者与医师的反馈累计量，适合定期汇总排查。</p>
+        </div>
+    </div>
+
+    <div class="mc-overview-grid">
+        <section class="mc-overview-card">
+            <div class="mc-work-head">
+                <span class="mc-app-kicker">近 7 天概览</span>
+                <h2>{{ admin_dashboard_timeline.window_start }} 至 {{ admin_dashboard_timeline.today }}</h2>
+            </div>
+            <div class="mc-overview-stats">
+                <div class="mc-overview-stat">
+                    <span>新增提问</span>
+                    <strong>{{ admin_dashboard_metrics.questions_last_7_days|default:0 }}</strong>
+                </div>
+                <div class="mc-overview-stat">
+                    <span>新增回复</span>
+                    <strong>{{ admin_dashboard_metrics.replies_last_7_days|default:0 }}</strong>
+                </div>
+                <div class="mc-overview-stat">
+                    <span>新增反馈</span>
+                    <strong>{{ admin_dashboard_metrics.feedback_last_7_days|default:0 }}</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="mc-overview-card">
+            <div class="mc-work-head">
+                <span class="mc-app-kicker">今日动态</span>
+                <h2>{{ admin_dashboard_timeline.today }}</h2>
+            </div>
+            <div class="mc-overview-stats">
+                <div class="mc-overview-stat">
+                    <span>今日提问</span>
+                    <strong>{{ admin_dashboard_metrics.today_questions|default:0 }}</strong>
+                </div>
+                <div class="mc-overview-stat">
+                    <span>今日回复</span>
+                    <strong>{{ admin_dashboard_metrics.today_replies|default:0 }}</strong>
+                </div>
+                <div class="mc-overview-stat">
+                    <span>今日反馈</span>
+                    <strong>{{ admin_dashboard_metrics.today_feedback|default:0 }}</strong>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="mc-focus-grid">
+        <a class="mc-focus-card mc-focus-warning" href="{% url 'admin:wenda_doctor_changelist' %}?confirmed__exact=-1">
+            <span class="mc-focus-label">优先处理</span>
+            <strong>{{ admin_dashboard_metrics.pending_doctors|default:0 }}</strong>
+            <p>位医师仍待审核，建议先完成认证资料核验。</p>
+        </a>
+        <a class="mc-focus-card mc-focus-primary" href="{% url 'admin:wenda_question_changelist' %}?reply_status=pending">
+            <span class="mc-focus-label">待回复问题</span>
+            <strong>{{ admin_dashboard_metrics.unanswered_questions|default:0 }}</strong>
+            <p>条提问尚未闭环，可直接进入巡检列表继续处理。</p>
+        </a>
+        <a class="mc-focus-card mc-focus-danger" href="{% url 'admin:wenda_feedback_changelist' %}?priority_level=high">
+            <span class="mc-focus-label">高优先级反馈</span>
+            <strong>{{ admin_dashboard_metrics.high_priority_feedback|default:0 }}</strong>
+            <p>条反馈包含报错或异常关键词，建议优先排查。</p>
+        </a>
+    </div>
+
+    <section class="mc-guide-card">
+        <div class="mc-work-head">
+            <span class="mc-app-kicker">巡检建议</span>
+            <h2>推荐处理顺序</h2>
+        </div>
+        <div class="mc-guide-steps">
+            <div class="mc-guide-step">
+                <strong>1. 先处理医师审核</strong>
+                <span>优先清空待审核资料，避免运营链路卡在认证环节。</span>
+            </div>
+            <div class="mc-guide-step">
+                <strong>2. 再排查异常反馈</strong>
+                <span>重点关注报错、故障、无法使用等高风险问题，降低用户受阻时间。</span>
+            </div>
+            <div class="mc-guide-step">
+                <strong>3. 最后巡检问答闭环</strong>
+                <span>检查未回复提问与最新回复记录，确保知识服务持续稳定输出。</span>
+            </div>
+        </div>
+    </section>
+
+    <div class="mc-work-grid">
+        <section class="mc-work-card">
+            <div class="mc-work-head">
+                <span class="mc-app-kicker">最近待审核</span>
+                <h2>医师资料</h2>
+            </div>
+            <div class="mc-feed-list">
+                {% for doctor in admin_dashboard_recent.pending_doctors %}
+                <div class="mc-feed-row">
+                    <div class="mc-feed-copy">
+                        <strong>{{ doctor.name|default:doctor.user_name }}</strong>
+                        <span>{{ doctor.hospital|default:"未填写医院" }} / {{ doctor.department|default:"未填写科室" }}</span>
+                    </div>
+                    <a href="{% url 'admin:wenda_doctor_change' doctor.id %}" class="btn btn-sm btn-outline-info">处理</a>
+                </div>
+                {% empty %}
+                <div class="mc-feed-empty">当前没有待审核医师记录。</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="mc-work-card">
+            <div class="mc-work-head">
+                <span class="mc-app-kicker">最新反馈</span>
+                <h2>处理提醒</h2>
+            </div>
+            <div class="mc-feed-list">
+                {% for item in admin_dashboard_recent.feedback %}
+                <div class="mc-feed-row">
+                    <div class="mc-feed-copy">
+                        <strong>{{ item.feedback_type }} / {{ item.user_role }}</strong>
+                        <span>{{ item.content|truncatechars:42 }}</span>
+                    </div>
+                    <a href="{% url 'admin:wenda_feedback_change' item.id %}" class="btn btn-sm btn-outline-info">查看</a>
+                </div>
+                {% empty %}
+                <div class="mc-feed-empty">当前没有新的反馈记录。</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="mc-work-card">
+            <div class="mc-work-head">
+                <span class="mc-app-kicker">最新提问</span>
+                <h2>问答巡检</h2>
+            </div>
+            <div class="mc-feed-list">
+                {% for question in admin_dashboard_recent.questions %}
+                <div class="mc-feed-row">
+                    <div class="mc-feed-copy">
+                        <strong>{{ question.title|truncatechars:24 }}</strong>
+                        <span>{{ question.user__user_name }} / {{ question.date }}</span>
+                    </div>
+                    <a href="{% url 'admin:wenda_question_change' question.id %}" class="btn btn-sm btn-outline-info">查看</a>
+                </div>
+                {% empty %}
+                <div class="mc-feed-empty">当前没有新的提问记录。</div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <div class="mc-app-grid">
+        {% for app in app_list %}
+        <section class="mc-app-card">
+            <div class="mc-app-head">
+                <span class="mc-app-kicker">应用模块</span>
+                <h2>{{ app.name }}</h2>
+            </div>
+            <div class="mc-model-list">
+                {% for model in app.models %}
+                <div class="mc-model-row">
+                    <div class="mc-model-copy">
+                        <strong>{{ model.name }}</strong>
+                        <span>{{ app.name }} 数据管理入口</span>
+                    </div>
+                    <div class="mc-model-actions">
+                        {% if model.admin_url %}
+                        <a href="{{ model.admin_url }}" class="btn btn-sm btn-info">进入</a>
+                        {% endif %}
+                        {% if model.add_url %}
+                        <a href="{{ model.add_url }}" class="btn btn-sm btn-outline-info">新增</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

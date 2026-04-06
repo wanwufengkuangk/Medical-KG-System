@@ -5,6 +5,10 @@ graph.db/
 db.sqlite3
 spider/*.json
 spider/*.csv
+_repo_archives/
+findings.md
+progress.md
+task_plan.md
 
 # 忽略缓存
 __pycache__/
@@ -12,3 +16,7 @@ __pycache__/
 .idea/
 .vscode/
 venv/
+.codex/
+mysite/diagnosis_artifacts*/
+mysite/*.pth
+mysite/*.png

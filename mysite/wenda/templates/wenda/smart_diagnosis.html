@@ -242,7 +242,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>AI 智能诊断实验室 - 深度学习</title>
+    <title>AI 智能诊断实验室 - 症状推断疾病</title>
     {% load static %}
     <link href="{% static 'wenda/css/bootstrap.min.css' %}" rel="stylesheet">
     <script src="{% static 'wenda/js/jquery-3.3.1.min.js' %}"></script>
@@ -275,13 +275,13 @@
 <body>
 
     <div class="header">
-        <span style="font-size: 18px; font-weight: bold;"><i class="glyphicon glyphicon-flash"></i> 智能诊断实验室 (Deep Learning TextCNN)</span>
+        <span style="font-size: 18px; font-weight: bold;"><i class="glyphicon glyphicon-flash"></i> 智能诊断实验室 (症状推断疾病模型)</span>
         <a href="{% url 'wenda:index' %}">← 返回工作台</a>
     </div>
 
     <div class="main-container">
         <div class="alert alert-info" style="border-radius: 8px; background-color: #eef5ff; border: none; color: #34495e;">
-            <strong>原理说明：</strong> 本系统采用 <b>PyTorch 深度学习 (TextCNN 文本卷积神经网络)</b> 架构。模型基于权威中文医疗问答数据集 (cMedQA2) 训练。您只需用自然语言输入症状，模型将提取文本局部语义特征，推理出概率最高的疾病分类。
+            <strong>原理说明：</strong> 当前模块采用基于 PyTorch 的症状推断疾病模型。训练过程会结合你现有的医疗问答数据集、疾病词典和症状词典，对自然语言症状描述进行编码，并输出最可能的疾病 Top 3 结果。
         </div>
 
         <div class="row">
@@ -295,7 +295,7 @@
                     <textarea id="patientText" class="form-control" rows="8" placeholder="在此输入病情描述..." style="margin-bottom: 20px; font-size: 15px; padding:15px; border-radius:8px; resize: none;"></textarea>
 
                     <button class="btn-predict" onclick="doTextPredict()">
-                        <i class="glyphicon glyphicon-tasks"></i> 启动 TextCNN 深度网络推理
+                        <i class="glyphicon glyphicon-tasks"></i> 启动症状推断疾病模型
                     </button>
                 </div>
             </div>
